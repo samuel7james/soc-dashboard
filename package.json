@@ -1,0 +1,57 @@
+{
+  "name": "soc-dashboard",
+  "version": "1.2.0",
+  "description": "Security Operations Center Dashboard - Real-time security monitoring with interactive web interface",
+  "main": "api/api_server.js",
+  "scripts": {
+    "start": "node api/api_server.js",
+    "dev": "nodemon api/api_server.js",
+    "docker:build": "docker build -t soc-dashboard .",
+    "docker:run": "docker run -p 3000:3000 soc-dashboard",
+    "docker:compose": "docker-compose up -d"
+  },
+  "keywords": [
+    "security",
+    "soc",
+    "dashboard",
+    "monitoring",
+    "cybersecurity",
+    "real-time",
+    "threat-detection",
+    "web-socket",
+    "nodejs",
+    "express",
+    "chartjs"
+  ],
+  "author": "SOC Dashboard Team",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "ws": "^8.13.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/samuel7james/soc-dashboard.git"
+  },
+  "bugs": {
+    "url": "https://github.com/samuel7james/soc-dashboard/issues"
+  },
+  "homepage": "https://github.com/samuel7james/soc-dashboard#readme",
+  "os": [
+    "linux",
+    "darwin",
+    "win32"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ]
+} 

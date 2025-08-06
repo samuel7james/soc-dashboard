@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOC Dashboard - Security Operations Center</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <i class="fas fa-shield-alt"></i>
+                <h1>SOC Dashboard</h1>
+                <span class="subtitle">Security Operations Center</span>
+            </div>
+            <div class="header-right">
+                <div class="status-indicator" id="connectionStatus">
+                    <span class="status-dot online"></span>
+                    <span>Online</span>
+                </div>
+                <div class="current-time" id="currentTime"></div>
+                <div class="realtime-controls">
+                    <span id="realtimeStatus" class="status-inactive">🔴 Inactive</span>
+                    <button class="btn-scan" id="startRealtimeBtn">
+                        <i class="fas fa-play"></i>
+                        Start Real-time
+                    </button>
+                    <button class="btn-scan stop" id="stopRealtimeBtn" style="display: none;">
+                        <i class="fas fa-stop"></i>
+                        Stop Real-time
+                    </button>
+                </div>
+                <button class="btn-scan" id="runScanBtn">
+                    <i class="fas fa-search"></i>
+                    Manual Scan
+                </button>
+            </div>
+        </header>
+
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <ul class="nav-menu">
+                <li><a href="#overview" class="nav-link active" data-section="overview">
+                    <i class="fas fa-tachometer-alt"></i> Overview
+                </a></li>
+                <li><a href="#logins" class="nav-link" data-section="logins">
+                    <i class="fas fa-sign-in-alt"></i> Login Monitor
+                </a></li>
+                <li><a href="#network" class="nav-link" data-section="network">
+                    <i class="fas fa-network-wired"></i> Network
+                </a></li>
+                <li><a href="#processes" class="nav-link" data-section="processes">
+                    <i class="fas fa-microchip"></i> Processes
+                </a></li>
+                <li><a href="#files" class="nav-link" data-section="files">
+                    <i class="fas fa-folder-open"></i> File Monitor
+                </a></li>
+                <li><a href="#threats" class="nav-link" data-section="threats">
+                    <i class="fas fa-globe"></i> Threat Map
+                </a></li>
+                <li><a href="#alerts" class="nav-link" data-section="alerts">
+                    <i class="fas fa-exclamation-triangle"></i> Alerts
+                </a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Overview Section -->
+            <section id="overview" class="section active">
+                <div class="section-header">
+                    <h2><i class="fas fa-tachometer-alt"></i> Security Overview</h2>
+                    <span class="last-updated">Last updated: <span id="lastUpdated">--</span></span>
+                </div>
+
+                <!-- Alert Cards -->
+                <div class="alert-cards">
+                    <div class="alert-card critical">
+                        <div class="card-icon"><i class="fas fa-exclamation-circle"></i></div>
+                        <div class="card-content">
+                            <h3 id="criticalAlerts">0</h3>
+                            <p>Critical Alerts</p>
+                        </div>
+                    </div>
+                    <div class="alert-card high">
+                        <div class="card-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                        <div class="card-content">
+                            <h3 id="highAlerts">0</h3>
+                            <p>High Priority</p>
+                        </div>
+                    </div>
+                    <div class="alert-card medium">
+                        <div class="card-icon"><i class="fas fa-exclamation"></i></div>
+                        <div class="card-content">
+                            <h3 id="mediumAlerts">0</h3>
+                            <p>Medium Priority</p>
+                        </div>
+                    </div>
+                    <div class="alert-card success">
+                        <div class="card-icon"><i class="fas fa-shield-alt"></i></div>
+                        <div class="card-content">
+                            <h3 id="threatLevel">LOW</h3>
+                            <p>Threat Level</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dashboard Grid -->
+                <div class="dashboard-grid">
+                    <div class="widget">
+                        <div class="widget-header">
+                            <h3><i class="fas fa-sign-in-alt"></i> Login Activity</h3>
+                        </div>
+                        <div class="widget-content">
+                            <div class="metric">
+                                <span class="metric-value" id="failedLogins">0</span>
+                                <span class="metric-label">Failed Logins</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-value" id="successfulLogins">0</span>
+                                <span class="metric-label">Successful Logins</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-value" id="uniqueAttackers">0</span>
+                                <span class="metric-label">Unique Attackers</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="widget">
+                        <div class="widget-header">
+                            <h3><i class="fas fa-network-wired"></i> Network Status</h3>
+                        </div>
+                        <div class="widget-content">
+                            <div class="metric">
+                                <span class="metric-value" id="openPorts">0</span>
+                                <span class="metric-label">Open Ports</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-value" id="activeConnections">0</span>
+                                <span class="metric-label">Active Connections</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-value" id="portScans">0</span>
+                                <span class="metric-label">Port Scans Detected</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="widget">
+                        <div class="widget-header">
+                            <h3><i class="fas fa-microchip"></i> System Health</h3>
+                        </div>
+                        <div class="widget-content">
+                            <div class="metric">
+                                <span class="metric-value" id="totalProcesses">0</span>
+                                <span class="metric-label">Total Processes</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-value" id="suspiciousProcesses">0</span>
+                                <span class="metric-label">Suspicious Processes</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-value" id="memoryUsage">0%</span>
+                                <span class="metric-label">Memory Usage</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="widget chart-widget">
+                        <div class="widget-header">
+                            <h3><i class="fas fa-chart-line"></i> Threat Timeline</h3>
+                        </div>
+                        <div class="widget-content">
+                            <canvas id="threatChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Events -->
+                <div class="widget full-width">
+                    <div class="widget-header">
+                        <h3><i class="fas fa-list"></i> Recent Security Events</h3>
+                    </div>
+                    <div class="widget-content">
+                        <div class="events-list" id="recentEvents">
+                            <div class="event-item">
+                                <div class="event-icon info"><i class="fas fa-info"></i></div>
+                                <div class="event-details">
+                                    <span class="event-message">System monitoring initialized</span>
+                                    <span class="event-time">Just now</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Login Monitor Section -->
+            <section id="logins" class="section">
+                <div class="section-header">
+                    <h2><i class="fas fa-sign-in-alt"></i> Login Monitoring</h2>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="widget">
+                        <div class="widget-header">
+                            <h3><i class="fas fa-users"></i> Top Attackers</h3>
+                        </div>
+                        <div class="widget-content">
+                            <div class="attackers-list" id="topAttackers">
+                                <p>Loading attackers...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="widget">
+                        <div class="widget-header">
+                            <h3><i class="fas fa-chart-bar"></i> Login Statistics</h3>
+                        </div>
+                        <div class="widget-content">
+                            <canvas id="loginChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="widget full-width">
+                    <div class="widget-header">
+                        <h3><i class="fas fa-history"></i> Recent Login Attempts</h3>
+                    </div>
+                    <div class="widget-content">
+                        <div class="login-table" id="loginTable">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>IP Address</th>
+                                        <th>Username</th>
+                                        <th>Event Type</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="loginTableBody">
+                                    <tr>
+                                        <td colspan="5">Loading login data...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Network Monitor Section -->
+            <section id="network" class="section">
+                <div class="section-header">
+                    <h2><i class="fas fa-network-wired"></i> Network Monitoring</h2>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="widget">
+                        <div class="widget-header">
+                            <h3><i class="fas fa-search"></i> Port Scan Detection</h3>
+                        </div>
+                        <div class="widget-content">
+                            <div id="portScanList">Loading port scan data...</div>
+                        </div>
+                    </div>
+
+                    <div class="widget">
+                        <div class="widget-header">
+                            <h3><i class="fas fa-door-open"></i> Open Ports</h3>
+                        </div>
+                        <div class="widget-content">
+                            <div id="openPortsList">Loading open ports...</div>
+                        </div>
+                    </div>
+
+                    <div class="widget">
+                        <div class="widget-header">
+                            <h3><i class="fas fa-network-wired"></i> Network Connections</h3>
+                        </div>
+                        <div class="widget-content">
+                            <div id="networkConnections">Loading connection stats...</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Process Monitor Section -->
+            <section id="processes" class="section">
+                <div class="section-header">
+                    <h2><i class="fas fa-microchip"></i> Process Monitoring</h2>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="widget">
+                        <div class="widget-header">
+                            <h3><i class="fas fa-exclamation-triangle"></i> Suspicious Processes</h3>
+                        </div>
+                        <div class="widget-content">
+                            <div id="suspiciousProcessesList">Loading suspicious processes...</div>
+                        </div>
+                    </div>
+
+                    <div class="widget">
+                        <div class="widget-header">
+                            <h3><i class="fas fa-tachometer-alt"></i> Top Processes</h3>
+                        </div>
+                        <div class="widget-content">
+                            <div id="topProcessesList">Loading top processes...</div>
+                        </div>
+                    </div>
+
+                    <div class="widget">
+                        <div class="widget-header">
+                            <h3><i class="fas fa-chart-bar"></i> Process Summary</h3>
+                        </div>
+                        <div class="widget-content">
+                            <div id="processSummary">Loading process summary...</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- File Monitor Section -->
+            <section id="files" class="section">
+                <div class="section-header">
+                    <h2><i class="fas fa-folder-open"></i> File Integrity Monitoring</h2>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="widget">
+                        <div class="widget-header">
+                            <h3><i class="fas fa-file-alt"></i> Critical Files</h3>
+                        </div>
+                        <div class="widget-content">
+                            <div id="criticalFilesList">Loading critical files...</div>
+                        </div>
+                    </div>
+
+                    <div class="widget">
+                        <div class="widget-header">
+                            <h3><i class="fas fa-clock"></i> Recent Changes</h3>
+                        </div>
+                        <div class="widget-content">
+                            <div id="recentChangesList">Loading recent changes...</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Threat Map Section -->
+            <section id="threats" class="section">
+                <div class="section-header">
+                    <h2><i class="fas fa-globe"></i> Global Threat Map</h2>
+                </div>
+
+                <div class="widget full-width">
+                    <div class="widget-header">
+                        <h3><i class="fas fa-map-marked-alt"></i> Attack Sources</h3>
+                    </div>
+                    <div class="widget-content">
+                        <div id="threatMap">
+                            <div class="map-placeholder">
+                                <i class="fas fa-globe-americas"></i>
+                                <p>Loading threat map...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="widget">
+                        <div class="widget-header">
+                            <h3><i class="fas fa-flag"></i> Attacking Countries</h3>
+                        </div>
+                        <div class="widget-content">
+                            <div id="attackingCountries">Loading country data...</div>
+                        </div>
+                    </div>
+
+                    <div class="widget">
+                        <div class="widget-header">
+                            <h3><i class="fas fa-chart-pie"></i> Threat Distribution</h3>
+                        </div>
+                        <div class="widget-content">
+                            <canvas id="threatDistributionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Alerts Section -->
+            <section id="alerts" class="section">
+                <div class="section-header">
+                    <h2><i class="fas fa-exclamation-triangle"></i> Security Alerts</h2>
+                    <button class="btn-clear" id="clearAlertsBtn">
+                        <i class="fas fa-trash"></i> Clear All
+                    </button>
+                </div>
+
+                <div class="widget full-width">
+                    <div class="widget-header">
+                        <h3><i class="fas fa-bell"></i> Active Alerts</h3>
+                    </div>
+                    <div class="widget-content">
+                        <div id="alertsContainer">
+                            <div class="alert-item info">
+                                <div class="alert-icon">
+                                    <i class="fas fa-info-circle"></i>
+                                </div>
+                                <div class="alert-content">
+                                    <h4>System Status</h4>
+                                    <p>Loading alerts...</p>
+                                    <span class="alert-time">Just now</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Loading dashboard data...</p>
+        </div>
+    </div>
+
+    <!-- Notifications Container -->
+    <div id="notifications" class="notifications"></div>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>
+                
