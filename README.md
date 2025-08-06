@@ -1,6 +1,6 @@
-# 🛡️ SOC Dashboard - Security Operations Center
+# 🛡️ SOC Dashboard - Security Operations Centre
 
-A real-time security monitoring dashboard built with Node.js, WebSocket, and modern web technologies. Perfect for cybersecurity demonstrations, internships, and security operations centers.
+A real-time security monitoring dashboard built with Node.js, WebSocket, and modern web technologies. Perfect for cybersecurity demonstrations and security operations centres.
 
 ## Features
 
