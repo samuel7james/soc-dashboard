@@ -1,49 +1,47 @@
-# 🛡️ SOC Dashboard - Security Operations Centre
+# SOC Dashboard 🛡️
 
-A real-time security monitoring dashboard built with Node.js, WebSocket, and modern web technologies.
-## Features
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Version](https://img.shields.io/badge/version-1.0.0-green.svg)
+![Node](https://img.shields.io/badge/node-14+-brightgreen.svg)
 
-- 🔄 Real-time security scanning (every 10 seconds)
-- 📡 WebSocket live updates
-- 🎨 Modern, responsive UI
-- 🛡️ Multi-module security monitoring
-- 🔍 Live threat detection
-- 📈 Interactive charts and visualizations
-- 🗺️ Geographic threat mapping
-- ⚡ Performance optimized
-- 🐳 Docker support
-- 🔧 Cross-platform (Windows, Linux, macOS)
+A powerful, real-time security operations center (SOC) dashboard built with Node.js, WebSocket, and modern web technologies. Monitor security threats, system status, and network activity in real-time through an intuitive, responsive interface.
 
-## Quick Start
+## ✨ Features
 
-### Prerequisites
+- **🔄 Real-time Security Scanning**: Automated security scanning every 10 seconds
+- **📡 WebSocket Live Updates**: Instant dashboard updates without page refreshes
+- **🎨 Modern, Responsive UI**: Clean interface that works on desktops, tablets, and phones
+- **🛡️ Multi-module Security Monitoring**: Comprehensive security coverage
+- **🔍 Live Threat Detection**: Immediate notification of potential security issues
+- **📈 Interactive Charts and Visualizations**: Data-driven security insights
+- **🗺️ Geographic Threat Mapping**: Visual representation of attack origins
+- **⚡ Performance Optimized**: Low resource footprint
+- **🐳 Docker Support**: Easy deployment with containerization
+- **🔧 Cross-Platform**: Works on Windows, Linux, and macOS
 
-- **Node.js** 14+ ([Download](https://nodejs.org/))
-- **Git** (for Windows users - Git Bash)
+## 📋 Requirements
+
+- **Node.js 14+** ([Download](https://nodejs.org/))
+- **Git** (for Windows users: Git Bash)
 - **Modern Browser** (Chrome, Firefox, Safari, Edge)
 
-### Installation
+## 🚀 Quick Start
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/samuel7james/soc-dashboard.git
-   cd soc-dashboard
-   ```
+### Standard Installation
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+```bash
+# Clone the repository
+git clone https://github.com/samuel7james/soc-dashboard.git
+cd soc-dashboard
 
-3. **Start the dashboard**
-   ```bash
-   npm start
-   ```
+# Install dependencies
+npm install
 
-4. **Open in browser**
-   ```
-   http://localhost:3000
-   ```
+# Start the dashboard
+npm start
+
+# Open in browser
+# http://localhost:3000
 
 ### Docker Installation
 
