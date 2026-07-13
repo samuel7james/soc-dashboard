@@ -1,57 +1,35 @@
 {
-  "name": "soc-dashboard",
-  "version": "1.2.0",
-  "description": "Security Operations Center Dashboard - Real-time security monitoring with interactive web interface",
-  "main": "api/api_server.js",
-  "scripts": {
-    "start": "node api/api_server.js",
-    "dev": "nodemon api/api_server.js",
-    "docker:build": "docker build -t soc-dashboard .",
-    "docker:run": "docker run -p 3000:3000 soc-dashboard",
-    "docker:compose": "docker-compose up -d"
-  },
-  "keywords": [
-    "security",
-    "soc",
-    "dashboard",
-    "monitoring",
-    "cybersecurity",
-    "real-time",
-    "threat-detection",
-    "web-socket",
-    "nodejs",
-    "express",
-    "chartjs"
-  ],
-  "author": "SOC Dashboard Team",
+  "name": "soc-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Enterprise-grade Security Operations Center platform",
   "license": "MIT",
-  "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "ws": "^8.13.0"
+  "packageManager": "pnpm@10.28.2",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "clean": "turbo run clean && rimraf node_modules"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "prettier": "^3.4.2",
+    "prettier-plugin-tailwindcss": "^0.6.9",
+    "rimraf": "^6.0.1",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2"
   },
-  "engines": {
-    "node": ">=14.0.0",
-    "npm": ">=6.0.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/samuel7james/soc-dashboard.git"
-  },
-  "bugs": {
-    "url": "https://github.com/samuel7james/soc-dashboard/issues"
-  },
-  "homepage": "https://github.com/samuel7james/soc-dashboard#readme",
-  "os": [
-    "linux",
-    "darwin",
-    "win32"
-  ],
-  "cpu": [
-    "x64",
-    "arm64"
-  ]
-} 
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp",
+      "unrs-resolver"
+    ]
+  }
+}

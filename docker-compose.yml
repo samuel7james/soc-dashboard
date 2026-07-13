@@ -1,43 +1,38 @@
-version: '3.8'
+name: soc-platform
 
 services:
-  soc-dashboard:
-    build: .
-    container_name: soc-dashboard
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
-    volumes:
-      - ./data:/app/data
-      - ./logs:/app/logs
+  postgres:
+    image: postgres:16-alpine
+    container_name: soc-postgres
     restart: unless-stopped
+    environment:
+      POSTGRES_USER: soc
+      POSTGRES_PASSWORD: soc_dev_password
+      POSTGRES_DB: soc_platform
+    ports:
+      - "5432:5432"
+    volumes:
+      - soc-postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    networks:
-      - soc-network
+      test: ["CMD-SHELL", "pg_isready -U soc -d soc_platform"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
-  # Optional: Add Redis for caching (future enhancement)
-  # redis:
-  #   image: redis:7-alpine
-  #   container_name: soc-redis
-  #   ports:
-  #     - "6379:6379"
-  #   volumes:
-  #     - redis-data:/data
-  #   restart: unless-stopped
-  #   networks:
-  #     - soc-network
-
-networks:
-  soc-network:
-    driver: bridge
+  redis:
+    image: redis:7-alpine
+    container_name: soc-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - soc-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
 volumes:
-  # redis-data:
-  #   driver: local 
+  soc-postgres-data:
+  soc-redis-data:

@@ -1,0 +1,42 @@
+{
+  "name": "@soc/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf .next"
+  },
+  "dependencies": {
+    "@radix-ui/react-slot": "^1.1.1",
+    "@soc/types": "workspace:*",
+    "@soc/ui": "workspace:*",
+    "@tanstack/react-query": "^5.62.7",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.469.0",
+    "next": "16.2.10",
+    "next-themes": "^0.4.4",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "tailwind-merge": "^2.6.0",
+    "tw-animate-css": "^1.4.0",
+    "zustand": "^5.0.2"
+  },
+  "devDependencies": {
+    "@soc/config": "workspace:*",
+    "@tailwindcss/postcss": "^4",
+    "@tanstack/react-query-devtools": "^5.62.7",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.10",
+    "rimraf": "^6.0.1",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

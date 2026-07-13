@@ -1,152 +1,57 @@
-# SOC Dashboard 🛡️
+# SOC Platform
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Version](https://img.shields.io/badge/version-1.0.0-green.svg)
-![Node](https://img.shields.io/badge/node-14+-brightgreen.svg)
+An enterprise-grade Security Operations Center platform, in active rebuild. See [`PROJECT_PLAN.md`](PROJECT_PLAN.md) for the full architecture/audit and [`TASKS.md`](TASKS.md) for phase-by-phase progress.
 
-A powerful, real-time security operations center (SOC) dashboard built with Node.js, WebSocket, and modern web technologies. Monitor security threats, system status, and network activity in real-time through an intuitive, responsive interface.
+The original bash-script-driven demo (Express + vanilla JS, `Math.random()`-backed "live" data) has been moved to [`legacy/`](legacy/) and is being replaced incrementally by the monorepo below. It still runs standalone via `node legacy/api/api_server.js` if needed for reference.
 
-## ✨ Features
+## Monorepo layout
 
-- **🔄 Real-time Security Scanning**: Automated security scanning every 10 seconds
-- **📡 WebSocket Live Updates**: Instant dashboard updates without page refreshes
-- **🎨 Modern, Responsive UI**: Clean interface that works on desktops, tablets, and phones
-- **🛡️ Multi-module Security Monitoring**: Comprehensive security coverage
-- **🔍 Live Threat Detection**: Immediate notification of potential security issues
-- **📈 Interactive Charts and Visualizations**: Data-driven security insights
-- **🗺️ Geographic Threat Mapping**: Visual representation of attack origins
-- **⚡ Performance Optimized**: Low resource footprint
-- **🐳 Docker Support**: Easy deployment with containerization
-- **🔧 Cross-Platform**: Works on Windows, Linux, and macOS
-
-## 📋 Requirements
-
-- **Node.js 14+** ([Download](https://nodejs.org/))
-- **Git** (for Windows users: Git Bash)
-- **Modern Browser** (Chrome, Firefox, Safari, Edge)
-
-## 🚀 Quick Start
-
-### Standard Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/samuel7james/soc-dashboard.git
-cd soc-dashboard
-
-# Install dependencies
-npm install
-
-# Start the dashboard
-npm start
-
-# Open in browser
-# http://localhost:3000
-
-### Docker Installation
-
-```bash
-# Clone and run with Docker
-git clone https://github.com/samuel7james/soc-dashboard.git
-cd soc-dashboard
-docker-compose up -d
-
-# Open in browser
-# http://localhost:3000
+```text
+apps/
+  web/          Next.js 15 (App Router, TypeScript strict, Tailwind, shadcn-style UI)
+  api/          Fastify API (TypeScript strict, Zod validation, Pino logging)
+packages/
+  types/        Shared Zod schemas + inferred types, consumed by both apps
+  ui/           Shared design tokens, theme provider, and cross-cutting components
+  config/       Shared base tsconfig
+legacy/         Pre-rebuild application (Express + bash scripts), kept for reference
 ```
 
-## Usage
+## Requirements
 
-### Real-Time Scanning
+- Node.js ≥ 20
+- pnpm ≥ 10 (`corepack enable` or `npm i -g pnpm`)
 
-- **Automatic Start** - Real-time scanning starts automatically
-- **Manual Control** - Use Start/Stop buttons in the header
-- **Live Updates** - Dashboard updates every 10 seconds
-- **Status Monitoring** - Check real-time status indicator
+## Getting started
 
-### Dashboard Sections
+```bash
+pnpm install
 
-1. **Overview** - Security summary, threat levels, and system metrics
-2. **Login Monitor** - Failed login attempts, top attackers, and login statistics
-3. **Network** - Port scans, open ports, and network connections
-4. **Processes** - Suspicious process detection and resource monitoring
-5. **Files** - File integrity monitoring and recent changes
-6. **Threats** - Geographic threat mapping and attack sources
-7. **Alerts** - Security alerts and notifications
+# copy env templates
+cp apps/web/.env.example apps/web/.env.local
+cp apps/api/.env.example apps/api/.env
 
-## Architecture
+pnpm dev          # runs all apps in parallel via Turborepo
+```
 
-### Frontend
-- HTML5/CSS3 - Modern, responsive interface
-- Vanilla JavaScript - No framework dependencies
-- Chart.js - Real-time data visualization
-- WebSocket - Real-time communication
-- Font Awesome - Professional icons
+- Web: <http://localhost:3000>
+- API: <http://localhost:4000> (`/health`, `/ready`, `/api/v1`)
 
-### Backend
-- Node.js - Server runtime
-- Express.js - Web framework
-- WebSocket - Real-time updates
-- Bash Scripts - Security monitoring scripts
-- JSON - Data storage format
+## Scripts
 
-## API Endpoints
+Run from the repo root (fanned out to every workspace package via Turborepo):
 
-### Core Endpoints
-- `GET /api/dashboard` - Complete dashboard data
-- `GET /api/logins` - Login monitoring data
-- `GET /api/network` - Network monitoring data
-- `GET /api/processes` - Process monitoring data
-- `GET /api/files` - File monitoring data
-- `GET /api/threats` - Threat intelligence data
-- `GET /api/alerts` - Security alerts data
+```bash
+pnpm build       # production build
+pnpm lint        # ESLint
+pnpm typecheck   # tsc --noEmit
+pnpm test        # Vitest
+```
 
-### Real-time Endpoints
-- `POST /api/scan/start-realtime` - Start real-time scanning
-- `POST /api/scan/stop-realtime` - Stop real-time scanning
-- `GET /api/scan/status` - Real-time scanning status
-- `POST /api/scan/run` - Run manual security scan
+## Status
 
-## Security Scripts
-
-The dashboard uses several bash scripts for security monitoring:
-
-- **`monitor_logins.sh`** - Monitors failed login attempts and brute force attacks
-- **`detect_portscans.sh`** - Detects port scanning activities
-- **`check_processes.sh`** - Monitors suspicious processes
-- **`monitor_files.sh`** - Tracks file integrity and changes
-- **`geolocate_ips.sh`** - Geolocates IP addresses for threat mapping
-- **`generate_report.sh`** - Generates comprehensive security reports
-
-## Deployment
-
-### Production Deployment
-
-1. **Environment Setup**
-   ```bash
-   export NODE_ENV=production
-   export PORT=3000
-   ```
-
-2. **Process Management (PM2)**
-   ```bash
-   npm install -g pm2
-   pm2 start api/api_server.js --name soc-dashboard
-   pm2 startup
-   pm2 save
-   ```
-
-3. **Docker Deployment**
-   ```bash
-   docker-compose up -d
-   ```
+Phase 2 (Architecture & Foundation) is complete: monorepo scaffolding, design system/theme, routing skeleton for all core sections, and shared state (TanStack Query + Zustand) are in place. No persistence, auth, or real domain data yet — that lands in Phases 3–5. See `TASKS.md` for the live checklist.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-**⭐ Star this repository if you find it useful!**
-
-**🛡️ Built with ❤️ for the cybersecurity community** 
+MIT — see [LICENSE](LICENSE).
