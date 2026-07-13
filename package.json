@@ -27,7 +27,11 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
+      "@node-rs/argon2",
+      "@prisma/client",
+      "@prisma/engines",
       "esbuild",
+      "prisma",
       "sharp",
       "unrs-resolver"
     ]

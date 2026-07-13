@@ -8,11 +8,13 @@ The original bash-script-driven demo (Express + vanilla JS, `Math.random()`-back
 
 ```text
 apps/
-  web/          Next.js 15 (App Router, TypeScript strict, Tailwind, shadcn-style UI)
-  api/          Fastify API (TypeScript strict, Zod validation, Pino logging)
+  web/          Next.js (App Router, TypeScript strict, Tailwind, shadcn-style UI)
+  api/          Fastify API (TypeScript strict, Zod validation, Pino logging, auth)
 packages/
   types/        Shared Zod schemas + inferred types, consumed by both apps
   ui/           Shared design tokens, theme provider, and cross-cutting components
+  auth/         Password hashing (argon2id) and JWT/refresh-token primitives
+  database/     Prisma schema, migrations, seed script
   config/       Shared base tsconfig
 legacy/         Pre-rebuild application (Express + bash scripts), kept for reference
 ```
@@ -21,20 +23,28 @@ legacy/         Pre-rebuild application (Express + bash scripts), kept for refer
 
 - Node.js ≥ 20
 - pnpm ≥ 10 (`corepack enable` or `npm i -g pnpm`)
+- Docker (for local Postgres + Redis)
 
 ## Getting started
 
 ```bash
 pnpm install
 
-# copy env templates
+# start local Postgres + Redis
+docker compose up -d
+
+# copy env templates and fill in DATABASE_URL / JWT_ACCESS_SECRET
 cp apps/web/.env.example apps/web/.env.local
 cp apps/api/.env.example apps/api/.env
+
+# apply migrations and seed a dev owner account (owner@soc.local)
+pnpm --filter @soc/database db:migrate
+pnpm --filter @soc/database db:seed
 
 pnpm dev          # runs all apps in parallel via Turborepo
 ```
 
-- Web: <http://localhost:3000>
+- Web: <http://localhost:3000> (redirects to `/login`)
 - API: <http://localhost:4000> (`/health`, `/ready`, `/api/v1`)
 
 ## Scripts
@@ -46,11 +56,12 @@ pnpm build       # production build
 pnpm lint        # ESLint
 pnpm typecheck   # tsc --noEmit
 pnpm test        # Vitest
+pnpm format      # Prettier
 ```
 
 ## Status
 
-Phase 2 (Architecture & Foundation) is complete: monorepo scaffolding, design system/theme, routing skeleton for all core sections, and shared state (TanStack Query + Zustand) are in place. No persistence, auth, or real domain data yet — that lands in Phases 3–5. See `TASKS.md` for the live checklist.
+Phase 3 (Authentication & Security) is complete: real Postgres-backed accounts, argon2id password hashing, JWT access + rotating refresh tokens with theft detection, RBAC (owner/admin/analyst/read_only), CSRF protection, rate limiting, audit logging, and a working login/logout flow in the web app. No domain data (alerts, incidents, etc.) yet — that lands in Phases 4–5. See `TASKS.md` for the live checklist.
 
 ## License
 

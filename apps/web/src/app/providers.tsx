@@ -3,7 +3,9 @@
 import { ThemeProvider } from "@soc/ui";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+import { fetchCsrfToken } from "@/lib/api/auth";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -17,6 +19,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
         },
       }),
   );
+
+  useEffect(() => {
+    // Primes the CSRF cookie before the user submits anything mutating (e.g.
+    // the login form) — without this, the very first POST of a fresh visit
+    // would have no cookie to echo back and would 403.
+    void fetchCsrfToken();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { alertStatusSchema, severitySchema } from "./enums";
+import { alertStatusSchema, severitySchema } from "./enums.js";
 
 export const alertSchema = z.object({
   id: z.string().uuid(),

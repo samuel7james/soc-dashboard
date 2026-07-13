@@ -32,18 +32,20 @@ Tracks every implementation task grouped by phase, per `PROJECT_PLAN.md`. Checke
 
 ## Phase 3 — Authentication & Security
 
-- [ ] Prisma `User`, `Role`, `Session` models (design, in `packages/database`)
-- [ ] Auth.js (NextAuth) credentials provider + JWT access/refresh flow
-- [ ] Argon2id password hashing
-- [ ] RBAC roles (Owner/Admin/Analyst/Read-only) + permission matrix
-- [ ] API middleware: authentication guard + role-based authorization guard
-- [ ] Protected route wrapper on frontend (redirect unauthenticated users)
-- [ ] CSRF protection (double-submit token) on state-changing requests
-- [ ] Secure cookies (httpOnly, secure, SameSite)
-- [ ] Security headers via `helmet` + strict CSP (remove unpinned public CDNs)
-- [ ] Rate limiting (`@fastify/rate-limit` + Redis) on auth and scan/report-trigger endpoints
-- [ ] `AuditLog` model + write-path for all privileged actions
-- [ ] Auth test suite: login/logout, token refresh/expiry, RBAC boundary tests, session fixation checks
+- [x] **Design deviation from the original plan, approved by user:** API-owned custom auth instead of Auth.js — Fastify is the single source of truth for sessions/RBAC/audit rather than splitting that state between the API and Next.js
+- [x] Local Postgres + Redis via `docker-compose up -d` (approved by user), used for real (not mocked) integration testing
+- [x] `packages/database`: Prisma schema — `User`, `Session`, `AuditLog` models, `UserRole` enum (mirrors `packages/types`), initial migration applied, seed script (creates a dev owner account)
+- [x] `packages/auth`: Argon2id password hashing (`@node-rs/argon2`), JWT access tokens (`jose`, HS256, 15 min TTL), opaque rotating refresh tokens (SHA-256 hash stored, raw token never persisted) — each with its own unit test suite
+- [x] `apps/api` auth service: login (constant-time even for unknown emails, via a real dummy-hash comparison), refresh-token rotation with theft detection (reusing a rotated token revokes every session for that user), logout
+- [x] RBAC middleware (`requireAuth`, `requireRole(...roles)`) + roles owner/admin/analyst/read_only
+- [x] Auth routes: `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout`, `GET /auth/me`, `GET /csrf`; no public self-registration — `POST /api/v1/users` is owner/admin-only (internal security tool, not open sign-up)
+- [x] Protected route wrapper on frontend: `AuthGuard` client component (TanStack Query `/me` check + redirect to `/login`) wrapping the `(dashboard)` route group
+- [x] CSRF protection: double-submit cookie pattern, enforced on every mutating `/api/v1/*` request including login itself
+- [x] Secure cookies: httpOnly + SameSite (`lax` access token, `strict` refresh token scoped to `/api/v1/auth`) + `secure` in production
+- [x] Security headers via `helmet` with a strict CSP; rate limiting (global 100/min, login endpoint 10/min per IP) — disabled only under `NODE_ENV=test` so the test suite isn't rate-limited by its own volume of requests
+- [x] `AuditLog` write-path wired into login/login-failed/logout/user-created; verified real rows land in Postgres during live testing
+- [x] Auth test suite (26 tests total, run against the real local Postgres, not mocks): CSRF rejection, login success/failure (including the generic "wrong email or password" message), `/me`, refresh rotation, stolen-refresh-token theft detection, logout, RBAC boundaries (403 for non-admin, 201 + audit log for owner)
+- [x] Live-verified in a real browser (Playwright): logged-out redirect to `/login`, login as the seeded owner, dashboard renders with user email/role in the topbar, logout redirects back to `/login` — this caught and fixed a real bug (logout silently failed because `fetch` was sent `Content-Type: application/json` with no body)
 
 ## Phase 4 — Database & Backend
 
