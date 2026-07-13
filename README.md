@@ -45,7 +45,7 @@ pnpm dev          # runs all apps in parallel via Turborepo
 ```
 
 - Web: <http://localhost:3000> (redirects to `/login`)
-- API: <http://localhost:4000> (`/health`, `/ready`, `/api/v1`)
+- API: <http://localhost:4000> (`/health`, `/ready`, `/api/v1`, OpenAPI docs at `/docs` in non-production)
 
 ## Scripts
 
@@ -61,7 +61,7 @@ pnpm format      # Prettier
 
 ## Status
 
-Phase 3 (Authentication & Security) is complete: real Postgres-backed accounts, argon2id password hashing, JWT access + rotating refresh tokens with theft detection, RBAC (owner/admin/analyst/read_only), CSRF protection, rate limiting, audit logging, and a working login/logout flow in the web app. No domain data (alerts, incidents, etc.) yet — that lands in Phases 4–5. See `TASKS.md` for the live checklist.
+Phase 4 (Database & Backend) is complete: the full SOC domain model (alerts, incidents, assets, vulnerabilities, IOCs, threat actors, MITRE ATT&CK techniques) with a paginated/filterable/sortable REST API, Zod-validated end to end, auto-generated OpenAPI docs, a real Redis-backed cache, and a seeded demo dataset. No UI for any of this yet — the web app still only has the auth flow. Phase 5 wires the dashboard, alert triage, incident workboard, and the rest of the frontend up to this API. See `TASKS.md` for the live checklist.
 
 ## License
 

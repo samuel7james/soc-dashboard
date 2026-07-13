@@ -49,17 +49,20 @@ Tracks every implementation task grouped by phase, per `PROJECT_PLAN.md`. Checke
 
 ## Phase 4 — Database & Backend
 
-- [ ] Full Prisma schema: `Alert`, `Incident`, `IncidentTimelineEvent`, `Asset`, `Vulnerability`, `IOC`, `ThreatActor`, `MitreTechnique`, `AlertMitreMapping`, `Notification`, `Report`, `IngestionSource`, `RawEvent`
-- [ ] Migrations authored and applied
-- [ ] Seed data (MITRE ATT&CK technique reference set, demo org/users/sample alerts)
-- [ ] REST API v1: CRUD for alerts, incidents, assets, vulnerabilities, IOCs, users
-- [ ] Pagination/filtering/sorting on all list endpoints
-- [ ] Zod request/response validation on every route
-- [ ] Centralized error handling + typed error responses
-- [ ] Structured logging (Pino) replacing `console.log`
-- [ ] OpenAPI spec generation (`@fastify/swagger` + `zod-to-openapi`)
-- [ ] Redis integration: shared cache layer replacing in-process `Map`
-- [ ] `docs/database-erd.md` generated
+- [x] Full Prisma schema: `Alert`, `Incident`, `IncidentTimelineEvent`, `Asset`, `Vulnerability`, `IOC`, `ThreatActor`, `MitreTechnique`, `AlertMitreMapping`, `Notification`, `IngestionSource`, `RawEvent` (16 tables total incl. Phase 3's `User`/`Session`/`AuditLog`; `Report` deferred to the Phase 5/6 reporting feature rather than modeled speculatively now)
+- [x] Migration authored and applied (`20260713180321_domain_model`)
+- [x] Seed data: 33 real MITRE ATT&CK (Enterprise) techniques across 12 tactics, plus a full demo dataset (6 assets, 5 vulnerabilities referencing real public CVEs, 1 threat actor, 3 IOCs, 8 alerts with technique mappings, 3 incidents with timelines) — idempotent, guarded against re-seeding on top of existing data
+- [x] REST API v1: full CRUD for alerts, incidents (+ timeline sub-resource), assets, vulnerabilities, IOCs; read-only for MITRE techniques; users CRUD carried over from Phase 3
+- [x] Pagination/filtering/sorting on every list endpoint (shared `paginatedQuerySchema`/`toSkipTake`/`toPaginatedResult` helpers)
+- [x] Zod request validation on every route via `fastify-type-provider-zod` (global validator/serializer compilers), replacing the Phase 3 pattern of manual `.parse()` calls in route bodies (auth/users routes migrated too, for consistency)
+- [x] Centralized error handling (unchanged from Phase 3, now also driving 400s for the new routes' schema validation failures)
+- [x] Structured logging (Pino) — unchanged from Phase 3, no `console.log` in request-handling code (seed script's `console.log` is fine, it's a one-off CLI script)
+- [x] OpenAPI spec generated from the same Zod schemas via `@fastify/swagger` + `fastify-type-provider-zod`'s `jsonSchemaTransform` (no hand-maintained spec, no separate `zod-to-openapi` wiring needed); Swagger UI at `/docs`, dev-only
+- [x] Redis wired as a real shared cache: MITRE technique list (rarely-changing reference data) cached with a 1-hour TTL, verified live via `redis-cli`; fails open (falls through to Postgres) if Redis is unreachable rather than erroring the request
+- [x] `docs/database-erd.md` — Mermaid ER diagram + notes on the non-obvious design choices (nullable `Alert.incidentId` vs. a join table, hashed refresh tokens, loose-schema `RawEvent.payload`)
+- [x] Discovered mid-phase, fixed: a real TypeScript+Prisma pitfall where a generic helper function (`stripUndefined`) constructing `data:` objects made TS pick the wrong arm of Prisma's `Checked`/`Unchecked` create-input union; resolved with explicit `as Prisma.XUncheckedCreateInput` casts at each call site (documented in code, not just worked around silently)
+- [x] Tests: 37 total across the API (up from 26 in Phase 3) — new coverage for asset CRUD/RBAC/pagination and alert CRUD with MITRE technique mapping replace-on-update semantics, all against the real local Postgres
+- [x] Live-verified: booted the API, logged in as the seeded owner, and exercised filtered/paginated alerts, incidents, MITRE techniques (confirmed cached in Redis via `redis-cli GET`/`TTL`), and assets against the real seeded data; confirmed `/docs` serves a real 21-path OpenAPI document
 
 ## Phase 5 — Core SOC Platform
 

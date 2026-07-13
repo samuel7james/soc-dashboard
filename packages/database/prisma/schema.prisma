@@ -28,6 +28,11 @@ model User {
   sessions  Session[]
   auditLogs AuditLog[]
 
+  assignedAlerts         Alert[]
+  assignedIncidents      Incident[]
+  authoredTimelineEvents IncidentTimelineEvent[]
+  notifications          Notification[]
+
   @@map("users")
 }
 
@@ -67,4 +72,285 @@ model AuditLog {
   @@index([action])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+// ---------------------------------------------------------------------------
+// Core SOC domain (Phase 4)
+// ---------------------------------------------------------------------------
+
+// Mirrors packages/types/src/enums.ts — keep in sync.
+enum Severity {
+  critical
+  high
+  medium
+  low
+  info
+}
+
+enum AlertStatus {
+  open
+  acknowledged
+  resolved
+  false_positive
+}
+
+enum IncidentStatus {
+  open
+  investigating
+  contained
+  resolved
+  closed
+}
+
+enum IngestionSourceType {
+  demo_generator
+  syslog
+  file_upload
+  webhook
+}
+
+enum AssetType {
+  server
+  workstation
+  network_device
+  cloud_resource
+  other
+}
+
+enum VulnerabilityStatus {
+  open
+  remediated
+  accepted_risk
+  false_positive
+}
+
+enum IocType {
+  ip
+  domain
+  url
+  file_hash
+  email
+}
+
+enum IncidentEventType {
+  note
+  status_change
+  assignment
+  alert_linked
+}
+
+enum NotificationType {
+  alert
+  incident
+  system
+}
+
+model Asset {
+  id          String    @id @default(uuid())
+  name        String
+  type        AssetType
+  ipAddress   String?
+  hostname    String?
+  criticality Severity  @default(medium)
+  owner       String?
+  tags        String[]  @default([])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  alerts          Alert[]
+  vulnerabilities Vulnerability[]
+
+  @@index([type])
+  @@index([criticality])
+  @@map("assets")
+}
+
+model Vulnerability {
+  id           String              @id @default(uuid())
+  title        String
+  description  String?
+  cveId        String?
+  severity     Severity
+  status       VulnerabilityStatus @default(open)
+  assetId      String?
+  asset        Asset?              @relation(fields: [assetId], references: [id], onDelete: SetNull)
+  discoveredAt DateTime            @default(now())
+  remediatedAt DateTime?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  @@index([assetId])
+  @@index([severity])
+  @@index([status])
+  @@map("vulnerabilities")
+}
+
+model ThreatActor {
+  id             String   @id @default(uuid())
+  name           String   @unique
+  aliases        String[] @default([])
+  description    String?
+  sophistication String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  iocs IOC[]
+
+  @@map("threat_actors")
+}
+
+model IOC {
+  id            String       @id @default(uuid())
+  type          IocType
+  value         String
+  severity      Severity     @default(medium)
+  description   String?
+  source        String?
+  threatActorId String?
+  threatActor   ThreatActor? @relation(fields: [threatActorId], references: [id], onDelete: SetNull)
+  firstSeenAt   DateTime     @default(now())
+  lastSeenAt    DateTime     @default(now())
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@unique([type, value])
+  @@index([threatActorId])
+  @@index([severity])
+  @@map("iocs")
+}
+
+// Seeded reference data (MITRE ATT&CK) — not user-editable via the API.
+model MitreTechnique {
+  id          String   @id
+  name        String
+  tactic      String
+  description String?
+  url         String?
+  createdAt   DateTime @default(now())
+
+  alertMappings AlertMitreMapping[]
+
+  @@index([tactic])
+  @@map("mitre_techniques")
+}
+
+model Incident {
+  id           String         @id @default(uuid())
+  title        String
+  description  String?
+  severity     Severity
+  status       IncidentStatus @default(open)
+  assignedToId String?
+  assignedTo   User?          @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  closedAt     DateTime?
+
+  alerts         Alert[]
+  timelineEvents IncidentTimelineEvent[]
+
+  @@index([status])
+  @@index([assignedToId])
+  @@map("incidents")
+}
+
+model IncidentTimelineEvent {
+  id         String            @id @default(uuid())
+  incidentId String
+  incident   Incident          @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  authorId   String?
+  author     User?             @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  eventType  IncidentEventType
+  message    String
+  createdAt  DateTime          @default(now())
+
+  @@index([incidentId])
+  @@map("incident_timeline_events")
+}
+
+model IngestionSource {
+  id             String              @id @default(uuid())
+  name           String
+  type           IngestionSourceType
+  isActive       Boolean             @default(false)
+  config         Json?
+  lastIngestedAt DateTime?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  alerts    Alert[]
+  rawEvents RawEvent[]
+
+  @@map("ingestion_sources")
+}
+
+// Landing table for normalized-but-uncorrelated telemetry. Ingestion
+// connectors (Phase 5) write here; detection logic reads from here to
+// produce Alerts. Kept intentionally schema-loose (JSON payload) since raw
+// event shape varies by source type.
+model RawEvent {
+  id                String          @id @default(uuid())
+  ingestionSourceId String
+  ingestionSource   IngestionSource @relation(fields: [ingestionSourceId], references: [id], onDelete: Cascade)
+  receivedAt        DateTime        @default(now())
+  sourceIp          String?
+  normalizedType    String?
+  payload           Json
+
+  @@index([ingestionSourceId])
+  @@index([receivedAt])
+  @@map("raw_events")
+}
+
+model Alert {
+  id                String           @id @default(uuid())
+  title             String
+  description       String?
+  severity          Severity
+  status            AlertStatus      @default(open)
+  sourceIp          String?
+  assetId           String?
+  asset             Asset?           @relation(fields: [assetId], references: [id], onDelete: SetNull)
+  ingestionSourceId String?
+  ingestionSource   IngestionSource? @relation(fields: [ingestionSourceId], references: [id], onDelete: SetNull)
+  assignedToId      String?
+  assignedTo        User?            @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
+  incidentId        String?
+  incident          Incident?        @relation(fields: [incidentId], references: [id], onDelete: SetNull)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  mitreMappings AlertMitreMapping[]
+
+  @@index([status])
+  @@index([severity])
+  @@index([assetId])
+  @@index([incidentId])
+  @@index([createdAt])
+  @@map("alerts")
+}
+
+model AlertMitreMapping {
+  alertId          String
+  alert            Alert          @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  mitreTechniqueId String
+  mitreTechnique   MitreTechnique @relation(fields: [mitreTechniqueId], references: [id], onDelete: Cascade)
+
+  @@id([alertId, mitreTechniqueId])
+  @@map("alert_mitre_mappings")
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  message   String
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  @@index([userId])
+  @@index([readAt])
+  @@map("notifications")
 }

@@ -2,8 +2,12 @@ import cookie from "@fastify/cookie";
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import rateLimit from "@fastify/rate-limit";
+import swagger from "@fastify/swagger";
+import swaggerUi from "@fastify/swagger-ui";
 import Fastify from "fastify";
 import type { FastifyError, FastifyReply, FastifyRequest } from "fastify";
+import { jsonSchemaTransform, serializerCompiler, validatorCompiler } from "fastify-type-provider-zod";
+import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { ZodError } from "zod";
 
 import { env } from "./config/env.js";
@@ -27,7 +31,24 @@ export function buildApp() {
   const app = Fastify({
     logger: loggerOptions,
     trustProxy: true,
-  });
+  }).withTypeProvider<ZodTypeProvider>();
+
+  app.setValidatorCompiler(validatorCompiler);
+  app.setSerializerCompiler(serializerCompiler);
+
+  // OpenAPI docs are generated straight from each route's Zod schemas — no
+  // hand-maintained spec to drift out of sync. UI is dev-only; the API
+  // surface isn't something we want discoverable by an anonymous prod caller.
+  if (env.NODE_ENV !== "production") {
+    app.register(swagger, {
+      openapi: {
+        info: { title: "SOC Platform API", version: "v1" },
+        servers: [{ url: `http://${env.HOST}:${env.PORT}` }],
+      },
+      transform: jsonSchemaTransform,
+    });
+    app.register(swaggerUi, { routePrefix: "/docs" });
+  }
 
   app.register(helmet, {
     contentSecurityPolicy: {
@@ -83,3 +104,5 @@ export function buildApp() {
 
   return app;
 }
+
+export type TypedApp = ReturnType<typeof buildApp>;

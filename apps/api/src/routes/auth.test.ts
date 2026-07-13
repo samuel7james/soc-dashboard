@@ -1,62 +1,10 @@
 import { hashPassword } from "@soc/auth";
 import { prisma } from "@soc/database";
-import type { FastifyInstance, LightMyRequestResponse } from "fastify";
+import type { FastifyInstance } from "fastify";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { buildApp } from "../app.js";
-
-// Exercises the full HTTP surface (cookies, CSRF, RBAC) against the real local
-// Postgres — auth is the one layer where a mocked DB could hide a real bug.
-class TestClient {
-  private cookies = new Map<string, string>();
-
-  constructor(private readonly app: FastifyInstance) {}
-
-  private cookieHeader(): string {
-    return Array.from(this.cookies.entries())
-      .map(([name, value]) => `${name}=${value}`)
-      .join("; ");
-  }
-
-  private capture(res: LightMyRequestResponse): void {
-    for (const cookie of res.cookies) {
-      this.cookies.set(cookie.name, cookie.value);
-    }
-  }
-
-  clearCookie(name: string): void {
-    this.cookies.delete(name);
-  }
-
-  cookieValue(name: string): string | undefined {
-    return this.cookies.get(name);
-  }
-
-  async get(url: string): Promise<LightMyRequestResponse> {
-    const res = await this.app.inject({ method: "GET", url, headers: { cookie: this.cookieHeader() } });
-    this.capture(res);
-    return res;
-  }
-
-  async post(url: string, payload?: Record<string, unknown>): Promise<LightMyRequestResponse> {
-    const headers: Record<string, string> = { cookie: this.cookieHeader() };
-    const csrfToken = this.cookies.get("csrf_token");
-    if (csrfToken) headers["x-csrf-token"] = csrfToken;
-
-    const res = await this.app.inject({
-      method: "POST",
-      url,
-      headers,
-      ...(payload !== undefined ? { payload } : {}),
-    });
-    this.capture(res);
-    return res;
-  }
-
-  async primeCsrf(): Promise<void> {
-    await this.get("/api/v1/csrf");
-  }
-}
+import { TestClient } from "../test-utils/test-client.js";
 
 const testRunId = crypto.randomUUID().slice(0, 8);
 const analystEmail = `analyst-${testRunId}@test.local`;
@@ -120,9 +68,7 @@ describe("CSRF protection", () => {
 describe("login", () => {
   it("rejects an unknown email with a generic message", async () => {
     const client = new TestClient(app);
-    await client.primeCsrf();
-
-    const res = await client.post("/api/v1/auth/login", { email: "nobody@test.local", password });
+    const res = await client.loginAs("nobody@test.local", password);
 
     expect(res.statusCode).toBe(401);
     expect(res.json().message).toBe("Invalid email or password");
@@ -130,9 +76,7 @@ describe("login", () => {
 
   it("rejects a known email with the wrong password", async () => {
     const client = new TestClient(app);
-    await client.primeCsrf();
-
-    const res = await client.post("/api/v1/auth/login", { email: analystEmail, password: "wrong-password" });
+    const res = await client.loginAs(analystEmail, "wrong-password");
 
     expect(res.statusCode).toBe(401);
     expect(res.json().message).toBe("Invalid email or password");
@@ -140,9 +84,7 @@ describe("login", () => {
 
   it("accepts correct credentials and sets httpOnly session cookies", async () => {
     const client = new TestClient(app);
-    await client.primeCsrf();
-
-    const res = await client.post("/api/v1/auth/login", { email: analystEmail, password });
+    const res = await client.loginAs(analystEmail, password);
 
     expect(res.statusCode).toBe(200);
     expect(res.json().user.email).toBe(analystEmail);
@@ -163,8 +105,7 @@ describe("session lifecycle", () => {
 
   it("GET /me returns the user once logged in", async () => {
     const client = new TestClient(app);
-    await client.primeCsrf();
-    await client.post("/api/v1/auth/login", { email: analystEmail, password });
+    await client.loginAs(analystEmail, password);
 
     const res = await client.get("/api/v1/auth/me");
     expect(res.statusCode).toBe(200);
@@ -173,8 +114,7 @@ describe("session lifecycle", () => {
 
   it("refresh rotates the refresh token and issues a new access token", async () => {
     const client = new TestClient(app);
-    await client.primeCsrf();
-    await client.post("/api/v1/auth/login", { email: analystEmail, password });
+    await client.loginAs(analystEmail, password);
 
     const oldRefreshToken = client.cookieValue("refresh_token");
     const res = await client.post("/api/v1/auth/refresh");
@@ -185,8 +125,7 @@ describe("session lifecycle", () => {
 
   it("reusing a rotated (already-consumed) refresh token revokes the whole session chain", async () => {
     const client = new TestClient(app);
-    await client.primeCsrf();
-    await client.post("/api/v1/auth/login", { email: analystEmail, password });
+    await client.loginAs(analystEmail, password);
 
     const firstRefreshToken = client.cookieValue("refresh_token")!;
     await client.post("/api/v1/auth/refresh"); // rotates once, firstRefreshToken is now revoked
@@ -218,8 +157,7 @@ describe("session lifecycle", () => {
 
   it("logout revokes the session so refresh subsequently fails", async () => {
     const client = new TestClient(app);
-    await client.primeCsrf();
-    await client.post("/api/v1/auth/login", { email: analystEmail, password });
+    await client.loginAs(analystEmail, password);
 
     const logoutRes = await client.post("/api/v1/auth/logout");
     expect(logoutRes.statusCode).toBe(200);
@@ -232,8 +170,7 @@ describe("session lifecycle", () => {
 describe("RBAC", () => {
   it("blocks a non-admin from creating a user", async () => {
     const client = new TestClient(app);
-    await client.primeCsrf();
-    await client.post("/api/v1/auth/login", { email: analystEmail, password });
+    await client.loginAs(analystEmail, password);
 
     const res = await client.post("/api/v1/users", {
       email: `blocked-${testRunId}@test.local`,
@@ -247,8 +184,7 @@ describe("RBAC", () => {
 
   it("allows an owner to create a user, and records an audit log entry", async () => {
     const client = new TestClient(app);
-    await client.primeCsrf();
-    await client.post("/api/v1/auth/login", { email: ownerEmail, password });
+    await client.loginAs(ownerEmail, password);
 
     const newEmail = `created-${testRunId}@test.local`;
     const res = await client.post("/api/v1/users", {
