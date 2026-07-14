@@ -27,9 +27,9 @@ function IngestionSourcesPanel() {
   const demoSource = sources?.items.find((s) => s.type === "demo_generator");
 
   return (
-    <div className="mb-4 flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card p-3">
+    <div className="border-border bg-card mb-4 flex flex-wrap items-center gap-3 rounded-lg border p-3">
       <div className="flex items-center gap-1.5 text-sm">
-        <Sparkles className="size-4 text-muted-foreground" aria-hidden />
+        <Sparkles className="text-muted-foreground size-4" aria-hidden />
         <span className="font-medium">Demo Mode</span>
         <Badge variant={demoSource?.isActive ? "default" : "outline"}>
           {demoSource?.isActive ? "Active — synthetic telemetry" : "Off"}
@@ -45,8 +45,9 @@ function IngestionSourcesPanel() {
           {demoSource.isActive ? "Disable" : "Enable"}
         </Button>
       )}
-      <span className="text-xs text-muted-foreground">
-        When enabled, a background worker generates clearly-labeled synthetic events — never presented as real telemetry.
+      <span className="text-muted-foreground text-xs">
+        When enabled, a background worker generates clearly-labeled synthetic events — never presented as real
+        telemetry.
       </span>
     </div>
   );
@@ -79,10 +80,15 @@ function UploadButton() {
         className="hidden"
         onChange={(e) => void handleFileChange(e)}
       />
-      <Button size="sm" variant="outline" disabled={upload.isPending} onClick={() => inputRef.current?.click()}>
+      <Button
+        size="sm"
+        variant="outline"
+        disabled={upload.isPending}
+        onClick={() => inputRef.current?.click()}
+      >
         <Upload className="size-4" /> Upload CSV/JSON
       </Button>
-      {message && <span className="text-xs text-muted-foreground">{message}</span>}
+      {message && <span className="text-muted-foreground text-xs">{message}</span>}
     </div>
   );
 }
@@ -143,7 +149,7 @@ export default function HuntingPage() {
         </Select>
       </div>
 
-      <div className="rounded-lg border border-border">
+      <div className="border-border rounded-lg border">
         {isError && <ErrorState message="Failed to query raw events." />}
         {isPending && !isError && <LoadingRows />}
         {data && data.items.length === 0 && (
@@ -169,14 +175,19 @@ export default function HuntingPage() {
                     </TableCell>
                     <TableCell className="text-muted-foreground">{event.normalizedType ?? "—"}</TableCell>
                     <TableCell className="font-mono text-xs">{event.sourceIp ?? "—"}</TableCell>
-                    <TableCell className="max-w-md truncate font-mono text-xs text-muted-foreground">
+                    <TableCell className="text-muted-foreground max-w-md truncate font-mono text-xs">
                       {JSON.stringify(event.payload)}
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
-            <PaginationBar page={data.page} pageSize={data.pageSize} total={data.total} onPageChange={setPage} />
+            <PaginationBar
+              page={data.page}
+              pageSize={data.pageSize}
+              total={data.total}
+              onPageChange={setPage}
+            />
           </>
         )}
       </div>

@@ -9,4 +9,6 @@ import { env } from "../config/env.js";
 // be the wrong setting for a plain cache-get/set client.
 const bullConnection = new Redis(env.REDIS_URL ?? "redis://localhost:6379", { maxRetriesPerRequest: null });
 
-export const ingestionQueue = new Queue<IngestionJobData>(INGESTION_QUEUE_NAME, { connection: bullConnection });
+export const ingestionQueue = new Queue<IngestionJobData>(INGESTION_QUEUE_NAME, {
+  connection: bullConnection,
+});

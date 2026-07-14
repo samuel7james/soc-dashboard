@@ -14,7 +14,9 @@ function event(payload: Record<string, unknown>, sourceIp?: string): NormalizedE
 
 describe("evaluateDetectionRules", () => {
   it("flags a failed password message as a brute-force-pattern alert", () => {
-    const result = evaluateDetectionRules(event({ message: "Failed password for root from 10.0.0.5" }, "10.0.0.5"));
+    const result = evaluateDetectionRules(
+      event({ message: "Failed password for root from 10.0.0.5" }, "10.0.0.5"),
+    );
     expect(result).not.toBeNull();
     expect(result?.severity).toBe("medium");
     expect(result?.mitreTechniqueIds).toContain("T1110");

@@ -30,7 +30,9 @@ async function main(): Promise<void> {
   const syslogSocket = await startSyslogListener(ingestionQueue, logger);
   const demoModeTimer = startDemoModeSupervisor(ingestionQueue, logger);
 
-  logger.info("Worker fully started: ingestion queue, syslog listener, Demo Mode supervisor, notification delivery, scheduled reports.");
+  logger.info(
+    "Worker fully started: ingestion queue, syslog listener, Demo Mode supervisor, notification delivery, scheduled reports.",
+  );
 
   async function shutdown(): Promise<void> {
     logger.info("Shutting down worker...");

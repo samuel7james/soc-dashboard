@@ -86,14 +86,18 @@ Tracks every implementation task grouped by phase, per `PROJECT_PLAN.md`. Checke
 - [x] Fixed a flaky test (`dashboard-notifications.test.ts`) caused by asserting exact equality against shared DB state read outside the request — replaced with a before/after bracket
 - [x] Live-verified every new page in a real browser (Playwright): dashboard, alerts + detail dialog, incidents + detail dialog, assets, vulnerabilities, threat intel indicators + MITRE matrix, audit logs, notifications bell, hunting empty state, and a real CSV export download
 
-### Milestone 2 — ingestion, worker, Demo Mode, realtime (not started)
+### Milestone 2 — ingestion, worker, Demo Mode, realtime (complete)
 
-- [ ] Ingestion connector interface (`packages/connectors`)
-- [ ] **Real** ingestion connector #1: syslog UDP/TCP listener
-- [ ] **Real** ingestion connector #2: JSON/CSV upload
-- [ ] Synthetic "Demo Mode" generator, clearly labeled in UI, off by default
-- [ ] BullMQ worker app (`apps/worker`) for ingestion/report/notification jobs
-- [ ] WebSocket live push for new alerts/incidents (room-scoped, authenticated)
+- [x] Ingestion connector interface (`packages/connectors`): shared `NormalizedEvent`/`DetectionResult` types, RFC3164 syslog parser, hand-rolled RFC4180 CSV parser, pattern-based detection rules engine (3 rules: failed password → T1110/medium, `sudo COMMAND=` → T1548/low, ransomware/malware/trojan keyword → T1486/critical); 14 unit tests
+- [x] **Real** ingestion connector #1: syslog UDP listener (`apps/worker`, `node:dgram`), parses each datagram, enqueues onto a BullMQ `ingestion` queue — live-verified end-to-end (packet → `RawEvent` → detection → `Alert`)
+- [x] **Real** ingestion connector #2: JSON/CSV multipart upload (`POST /api/v1/ingest/upload`, `@fastify/multipart`, 5MB/1000-row limit) — live-verified via direct multipart POST
+- [x] Synthetic "Demo Mode" generator (`apps/worker`): polls the `demo_generator` `IngestionSource.isActive` flag, generates clearly-labeled synthetic syslog-style messages every 4s only while enabled; off by default; toggle via `PATCH /api/v1/hunting/sources/:id` (owner/admin only, audit-logged); live-verified on/off via `RawEvent` count deltas across two polling windows
+- [x] BullMQ worker app (`apps/worker`): `ingestion`, `notification-delivery`, `scheduled-reports` queues; a real repeatable `daily-summary` job registered (processor stubbed — no report content generation yet, deferred); notification-delivery processor stubbed (logs intended email/webhook delivery, no real transport — deferred to a later phase)
+- [x] WebSocket live push for new alerts/incidents: `GET /ws` (`@fastify/websocket`, cookie-authenticated via the existing session), Redis pub/sub (`soc:realtime` channel) fans events from either process (API for analyst-submitted, worker for ingestion-produced) out to connected clients; frontend `useRealtimeUpdates` hook reconnects with backoff and invalidates the relevant TanStack Query caches — live-verified with a standalone WS client receiving `alert.created` the instant an alert was created, and visually in-browser (new alert appeared in the Alerts table with no manual refresh)
+- [x] Resolved an `ioredis` dual-version conflict (`bullmq` pins `5.10.1` exactly; both apps had resolved to `5.11.1`, causing cascading structural type errors) via a root `pnpm.overrides` entry — a root-cause fix rather than per-call-site casts
+- [x] Added a real integration test for the worker's `processIngestionJob` (`apps/worker`, against the live local Postgres): benign telemetry produces a `RawEvent` with no alert; telemetry matching the "failed password" rule produces both a `RawEvent` and an `Alert` with the expected severity and MITRE mapping
+- [x] Live-verified via Playwright: Hunting page showing real ingested telemetry (syslog rows), Demo Mode enable/disable toggle, and the Alerts page picking up a newly-created alert via the WebSocket push without a manual refresh
+- [x] Full workspace verification: `pnpm lint` / `typecheck` / `test` / `build` clean across all 9 packages (apps: api, web, worker; packages: types, ui, auth, database, config, connectors)
 
 ## Phase 6 — Advanced Analytics
 

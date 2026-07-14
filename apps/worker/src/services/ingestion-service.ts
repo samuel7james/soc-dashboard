@@ -48,5 +48,8 @@ export async function processIngestionJob(data: IngestionJobData, logger: Logger
 
   await publishRealtimeEvent({ type: "alert.created", data: alert });
 
-  logger.info({ rawEventId: rawEvent.id, alertId: alert.id, title: alert.title }, "ingestion produced an alert");
+  logger.info(
+    { rawEventId: rawEvent.id, alertId: alert.id, title: alert.title },
+    "ingestion produced an alert",
+  );
 }

@@ -16,7 +16,8 @@ describe("parseSyslogMessage", () => {
   });
 
   it("parses a sshd failed password message", () => {
-    const raw = "<38>Jan  5 10:22:01 webserver sshd[1234]: Failed password for root from 10.0.0.5 port 51422 ssh2";
+    const raw =
+      "<38>Jan  5 10:22:01 webserver sshd[1234]: Failed password for root from 10.0.0.5 port 51422 ssh2";
     const parsed = parseSyslogMessage(raw);
 
     expect(parsed).not.toBeNull();

@@ -48,7 +48,9 @@ async function seedIngestionSources(): Promise<void> {
   for (const source of sources) {
     const existing = await prisma.ingestionSource.findFirst({ where: { type: source.type } });
     if (!existing) {
-      await prisma.ingestionSource.create({ data: { name: source.name, type: source.type, isActive: false } });
+      await prisma.ingestionSource.create({
+        data: { name: source.name, type: source.type, isActive: false },
+      });
     }
   }
   console.log("Seeded canonical ingestion sources (syslog, file_upload, demo_generator).");

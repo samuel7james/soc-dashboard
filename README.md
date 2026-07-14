@@ -61,7 +61,7 @@ pnpm format      # Prettier
 
 ## Status
 
-Phase 4 (Database & Backend) is complete: the full SOC domain model (alerts, incidents, assets, vulnerabilities, IOCs, threat actors, MITRE ATT&CK techniques) with a paginated/filterable/sortable REST API, Zod-validated end to end, auto-generated OpenAPI docs, a real Redis-backed cache, and a seeded demo dataset. No UI for any of this yet — the web app still only has the auth flow. Phase 5 wires the dashboard, alert triage, incident workboard, and the rest of the frontend up to this API. See `TASKS.md` for the live checklist.
+Phase 5 (Core SOC Platform) is complete: the full frontend (dashboard, alert triage, incident workboard, asset inventory, vulnerability management, threat intel + MITRE ATT&CK matrix, threat hunting, audit logs, notifications, reports) is wired up to the real API, and the platform ingests real telemetry — a syslog UDP listener and a CSV/JSON file upload connector, both feeding a pattern-based detection engine that produces real alerts, running on a dedicated BullMQ worker app (`apps/worker`). A synthetic Demo Mode generator (off by default, clearly labeled) is available for demos without live telemetry. New alerts and incidents push to connected browsers over an authenticated WebSocket. See `TASKS.md` for the live checklist.
 
 ## License
 

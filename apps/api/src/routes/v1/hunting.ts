@@ -47,7 +47,10 @@ export async function registerHuntingRoutes(app: TypedApp): Promise<void> {
   // sees platform-wide, not a personal preference.
   app.patch(
     "/sources/:id",
-    { preHandler: requireRole("owner", "admin"), schema: { params: idParamsSchema, body: toggleSourceSchema } },
+    {
+      preHandler: requireRole("owner", "admin"),
+      schema: { params: idParamsSchema, body: toggleSourceSchema },
+    },
     async (request, reply) => {
       const existing = await prisma.ingestionSource.findUnique({ where: { id: request.params.id } });
       if (!existing) {

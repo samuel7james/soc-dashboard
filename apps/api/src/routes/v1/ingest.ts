@@ -38,17 +38,24 @@ export async function registerIngestRoutes(app: TypedApp): Promise<void> {
     try {
       rows = isJson ? (JSON.parse(text) as Record<string, unknown>[]) : parseCsv(text);
     } catch {
-      return reply.status(400).send({ status: "error", message: `Failed to parse ${isJson ? "JSON" : "CSV"} file` });
+      return reply
+        .status(400)
+        .send({ status: "error", message: `Failed to parse ${isJson ? "JSON" : "CSV"} file` });
     }
 
     if (!Array.isArray(rows)) {
-      return reply.status(400).send({ status: "error", message: "JSON file must contain an array of records" });
+      return reply
+        .status(400)
+        .send({ status: "error", message: "JSON file must contain an array of records" });
     }
 
     if (rows.length > MAX_ROWS_PER_UPLOAD) {
       return reply
         .status(400)
-        .send({ status: "error", message: `File contains ${rows.length} rows; max is ${MAX_ROWS_PER_UPLOAD}` });
+        .send({
+          status: "error",
+          message: `File contains ${rows.length} rows; max is ${MAX_ROWS_PER_UPLOAD}`,
+        });
     }
 
     const ingestionSourceId = await getOrCreateFileUploadSource();
