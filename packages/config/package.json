@@ -2,7 +2,12 @@
   "name": "@soc/config",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "files": [
-    "tsconfig.base.json"
-  ]
+    "tsconfig.base.json",
+    "build-node-app.mjs"
+  ],
+  "dependencies": {
+    "esbuild": "^0.28.1"
+  }
 }

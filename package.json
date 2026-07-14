@@ -14,9 +14,11 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
+    "test:coverage": "turbo run test:coverage",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "clean": "turbo run clean && rimraf node_modules"
+    "clean": "turbo run clean && rimraf node_modules",
+    "postinstall": "pnpm --filter @soc/database exec prisma generate"
   },
   "devDependencies": {
     "prettier": "^3.4.2",
@@ -37,7 +39,9 @@
       "unrs-resolver"
     ],
     "overrides": {
-      "ioredis": "5.10.1"
+      "ioredis": "5.10.1",
+      "vite": ">=6.4.3",
+      "postcss": ">=8.5.10"
     }
   }
 }

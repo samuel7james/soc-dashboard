@@ -33,6 +33,76 @@ services:
       timeout: 5s
       retries: 10
 
+  # api/worker/web run behind the "full" profile — plain `docker compose up`
+  # still only starts postgres+redis (the normal local-dev workflow, where
+  # the apps run via `pnpm dev` on the host for fast reload). Bring up the
+  # fully containerized stack with `docker compose --profile full up --build`.
+  api:
+    build:
+      context: .
+      target: api
+    container_name: soc-api
+    restart: unless-stopped
+    profiles: ["full"]
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      HOST: 0.0.0.0
+      CORS_ORIGIN: http://localhost:3000
+      DATABASE_URL: postgresql://soc:soc_dev_password@postgres:5432/soc_platform?schema=public
+      REDIS_URL: redis://redis:6379
+      # A `?`-required var here would make Compose fail to interpolate even
+      # `docker compose up postgres redis` (Compose validates every
+      # service's environment block up front, regardless of --profile) — so
+      # this is a labeled, obviously-fake local-dev default, same spirit as
+      # POSTGRES_PASSWORD above. Override via a real JWT_ACCESS_SECRET in
+      # your shell/.env for anything beyond throwaway local testing.
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-dev-only-insecure-default-secret-override-me-32chars}
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: .
+      target: worker
+    container_name: soc-worker
+    restart: unless-stopped
+    profiles: ["full"]
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://soc:soc_dev_password@postgres:5432/soc_platform?schema=public
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "5514:5514/udp"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      target: web
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:4000
+    container_name: soc-web
+    restart: unless-stopped
+    profiles: ["full"]
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
 volumes:
   soc-postgres-data:
   soc-redis-data:

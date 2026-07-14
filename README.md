@@ -53,16 +53,37 @@ pnpm dev          # runs all apps in parallel via Turborepo
 Run from the repo root (fanned out to every workspace package via Turborepo):
 
 ```bash
-pnpm build       # production build
-pnpm lint        # ESLint
-pnpm typecheck   # tsc --noEmit
-pnpm test        # Vitest
-pnpm format      # Prettier
+pnpm build          # production build
+pnpm lint           # ESLint
+pnpm typecheck      # tsc --noEmit
+pnpm test           # Vitest
+pnpm test:coverage  # Vitest with coverage thresholds (apps/api, apps/worker, packages/auth, packages/connectors)
+pnpm format         # Prettier
 ```
+
+## Docker
+
+A single multi-stage root `Dockerfile` builds all three apps via `--target`:
+
+```bash
+docker build --target api    -t soc-platform/api    .
+docker build --target worker -t soc-platform/worker .
+docker build --target web    -t soc-platform/web    .
+```
+
+`docker compose up -d` still only starts Postgres + Redis (the everyday
+local-dev command, apps run via `pnpm dev` on the host for fast reload). To
+run the entire platform containerized instead:
+
+```bash
+docker compose --profile full up --build
+```
+
+See [`docs/ci-cd.md`](docs/ci-cd.md) for the CI/security pipeline this feeds into.
 
 ## Status
 
-Phase 6 (Advanced Analytics) is complete, on top of a fully functional Phase 5 core platform: the full frontend (dashboard, alert triage, incident workboard, asset inventory, vulnerability management, threat intel + MITRE ATT&CK matrix, threat hunting, audit logs, notifications, reports) is wired up to the real API, and the platform ingests real telemetry — a syslog UDP listener and a CSV/JSON file upload connector, both feeding a pattern-based detection engine that produces real alerts, running on a dedicated BullMQ worker app (`apps/worker`). A synthetic Demo Mode generator (off by default, clearly labeled) is available for demos without live telemetry. New alerts and incidents push to connected browsers over an authenticated WebSocket. A new `/analytics` page adds alert trend/heatmap charts, MITRE technique frequency, detection effectiveness, deterministic asset risk scoring, and an attack timeline — all backed by real Postgres aggregates. See `TASKS.md` for the live checklist.
+Phase 7 (DevSecOps) is complete, on top of a fully functional core platform (Phases 4-6): the full frontend (dashboard, alert triage, incident workboard, asset inventory, vulnerability management, threat intel + MITRE ATT&CK matrix, threat hunting, audit logs, notifications, reports, advanced analytics) is wired up to the real API, and the platform ingests real telemetry through a dedicated BullMQ worker app. All three apps now have verified, working multi-stage Docker images (building one and stopping there turned up a real bug — the production `build`/`start` path had never actually been exercised end-to-end, since dev always ran through `tsx`; that's fixed, not just papered over in the Dockerfile) plus a `docker compose --profile full` path to run the whole platform containerized. GitHub Actions workflows for CI (lint/typecheck/test-with-coverage/build/docker-build) and security scanning (CodeQL, Semgrep, gitleaks, dependency audit, Trivy, SBOM) are written and ready for the first push — `pnpm audit` is at zero known vulnerabilities, down from 11 at the Phase 1 baseline. See `TASKS.md` for the live checklist.
 
 ## License
 
