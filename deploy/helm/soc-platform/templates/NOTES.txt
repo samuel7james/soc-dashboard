@@ -1,0 +1,29 @@
+SOC Platform ({{ .Chart.AppVersion }}) deployed as release "{{ .Release.Name }}" in namespace "{{ .Release.Namespace }}".
+
+{{- if .Values.ingress.enabled }}
+
+Web UI:  http://{{ .Values.ingress.web.host }}
+API:     http://{{ .Values.ingress.api.host }}
+{{- else }}
+
+No Ingress configured (ingress.enabled=false). Reach the app via port-forward:
+
+  kubectl port-forward -n {{ .Release.Namespace }} svc/{{ include "soc-platform.fullname" . }}-web {{ .Values.web.service.port }}:{{ .Values.web.service.port }}
+  kubectl port-forward -n {{ .Release.Namespace }} svc/{{ include "soc-platform.fullname" . }}-api {{ .Values.api.service.port }}:{{ .Values.api.service.port }}
+{{- end }}
+
+Check rollout status:
+
+  kubectl rollout status -n {{ .Release.Namespace }} deployment/{{ include "soc-platform.fullname" . }}-api
+  kubectl rollout status -n {{ .Release.Namespace }} deployment/{{ include "soc-platform.fullname" . }}-worker
+  kubectl rollout status -n {{ .Release.Namespace }} deployment/{{ include "soc-platform.fullname" . }}-web
+
+Database migrations are NOT run by this chart — apply them yourself before
+the first install against a new database (or as a release hook if you adopt
+one later):
+
+  DATABASE_URL=<your-url> pnpm --filter @soc/database exec prisma migrate deploy
+
+Roll back a bad release:
+
+  helm rollback {{ .Release.Name }} -n {{ .Release.Namespace }}

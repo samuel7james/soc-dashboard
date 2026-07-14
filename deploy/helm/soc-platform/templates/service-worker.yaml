@@ -1,0 +1,19 @@
+# ClusterIP only, and only for the health port — never routed to from
+# outside the cluster. Exists so kubelet's HTTP probes have a stable target
+# and so a future Prometheus ServiceMonitor has something to scrape without
+# needing a separate change here.
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "soc-platform.fullname" . }}-worker
+  labels:
+    {{- include "soc-platform.componentLabels" (merge (dict "component" "worker") .) | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.worker.service.port }}
+      targetPort: health
+      protocol: TCP
+      name: health
+  selector:
+    {{- include "soc-platform.componentSelectorLabels" (merge (dict "component" "worker") .) | nindent 4 }}

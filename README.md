@@ -18,6 +18,9 @@ packages/
   database/     Prisma schema, migrations, seed script
   connectors/   Ingestion parsers (syslog, CSV) and detection rules, shared by api + worker
   config/       Shared base tsconfig
+deploy/
+  helm/         Kubernetes Helm chart (soc-platform)
+  terraform/    AWS reference module (ECS Fargate, RDS, ElastiCache, S3)
 ```
 
 ## Requirements
@@ -81,9 +84,21 @@ docker compose --profile full up --build
 
 See [`docs/ci-cd.md`](docs/ci-cd.md) for the CI/security pipeline this feeds into.
 
+## Infrastructure
+
+Two deployment paths, both consuming the same Docker images — see
+[`docs/deployment.md`](docs/deployment.md):
+
+- **Kubernetes**: `deploy/helm/soc-platform` — a Helm chart, live-tested end
+  to end on a real local cluster (login round-trip, a Postgres-outage
+  readiness-probe test, and a broken-rollout/`helm rollback` cycle).
+- **AWS (no Kubernetes)**: `deploy/terraform` — VPC, RDS Postgres,
+  ElastiCache Redis, ECR, ECS Fargate, ALB, S3. `init`/`validate`/`plan`'d
+  successfully (no AWS account available to `apply` against).
+
 ## Status
 
-Phase 7 (DevSecOps) is complete, on top of a fully functional core platform (Phases 4-6): the full frontend (dashboard, alert triage, incident workboard, asset inventory, vulnerability management, threat intel + MITRE ATT&CK matrix, threat hunting, audit logs, notifications, reports, advanced analytics) is wired up to the real API, and the platform ingests real telemetry through a dedicated BullMQ worker app. All three apps now have verified, working multi-stage Docker images (building one and stopping there turned up a real bug — the production `build`/`start` path had never actually been exercised end-to-end, since dev always ran through `tsx`; that's fixed, not just papered over in the Dockerfile) plus a `docker compose --profile full` path to run the whole platform containerized. GitHub Actions workflows for CI (lint/typecheck/test-with-coverage/build/docker-build) and security scanning (CodeQL, Semgrep, gitleaks, dependency audit, Trivy, SBOM) are written and ready for the first push — `pnpm audit` is at zero known vulnerabilities, down from 11 at the Phase 1 baseline. See `TASKS.md` for the live checklist.
+Phase 8 (Infrastructure) is complete, on top of a fully functional core platform (Phases 4-7): the full frontend (dashboard, alert triage, incident workboard, asset inventory, vulnerability management, threat intel + MITRE ATT&CK matrix, threat hunting, audit logs, notifications, reports, advanced analytics) is wired up to the real API, the platform ingests real telemetry through a dedicated BullMQ worker app, and CI/security pipelines are written and ready for the first push (`pnpm audit`: zero known vulnerabilities, down from 11 at the Phase 1 baseline). Building the Kubernetes/Terraform deployment configs surfaced and fixed two real bugs no earlier phase had caught: the API's `/ready` endpoint didn't actually check its dependencies despite claiming to, and the worker crashed its entire process (not just the affected request) on any transient database hiccup. Both are fixed and live-verified — including watching the worker survive a real Postgres outage and self-recover with zero restarts. See `TASKS.md` for the live checklist.
 
 ## License
 

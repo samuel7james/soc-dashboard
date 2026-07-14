@@ -45,25 +45,38 @@ export function startDemoModeSupervisor(queue: Queue<IngestionJobData>, logger: 
   let sourceId: string | null = null;
 
   async function tick(): Promise<void> {
-    const source = await getOrCreateDemoSource();
-    sourceId = source.id;
+    // This runs unawaited on a timer (see below) — letting a rejection
+    // escape here becomes an unhandled promise rejection, which crashes the
+    // entire worker process (killing every queue processor, the syslog
+    // listener, and the health server along with it) on any transient
+    // database blip. A skipped poll is recoverable; a dead process isn't.
+    try {
+      const source = await getOrCreateDemoSource();
+      sourceId = source.id;
 
-    if (source.isActive && !generatorInterval) {
-      logger.info("Demo Mode enabled — starting synthetic event generation");
-      generatorInterval = setInterval(() => {
-        if (!sourceId) return;
-        const { sourceIp, message } = buildDemoPayload();
-        void queue.add("demo-event", {
-          ingestionSourceId: sourceId,
-          normalizedType: "syslog",
-          sourceIp,
-          payload: { message, source: "demo" },
-        } satisfies IngestionJobData);
-      }, GENERATE_INTERVAL_MS);
-    } else if (!source.isActive && generatorInterval) {
-      logger.info("Demo Mode disabled — stopping synthetic event generation");
-      clearInterval(generatorInterval);
-      generatorInterval = null;
+      if (source.isActive && !generatorInterval) {
+        logger.info("Demo Mode enabled — starting synthetic event generation");
+        generatorInterval = setInterval(() => {
+          if (!sourceId) return;
+          const { sourceIp, message } = buildDemoPayload();
+          queue
+            .add("demo-event", {
+              ingestionSourceId: sourceId,
+              normalizedType: "syslog",
+              sourceIp,
+              payload: { message, source: "demo" },
+            } satisfies IngestionJobData)
+            .catch((error: unknown) => {
+              logger.error({ err: error }, "failed to enqueue demo event");
+            });
+        }, GENERATE_INTERVAL_MS);
+      } else if (!source.isActive && generatorInterval) {
+        logger.info("Demo Mode disabled — stopping synthetic event generation");
+        clearInterval(generatorInterval);
+        generatorInterval = null;
+      }
+    } catch (error) {
+      logger.error({ err: error }, "Demo Mode supervisor tick failed — will retry on the next poll");
     }
   }
 

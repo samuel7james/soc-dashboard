@@ -36,7 +36,13 @@ export async function startSyslogListener(queue: Queue<IngestionJobData>, logger
       payload: event.payload,
       ...(event.sourceIp !== undefined ? { sourceIp: event.sourceIp } : {}),
     };
-    void queue.add("syslog-event", jobData);
+    // Unawaited by design (a UDP handler can't block on it) — but an
+    // uncaught rejection here (e.g. Redis briefly unreachable) would
+    // otherwise crash the whole process. Dropping one datagram is fine;
+    // losing the entire listener over it isn't.
+    queue.add("syslog-event", jobData).catch((error: unknown) => {
+      logger.error({ err: error }, "failed to enqueue syslog event");
+    });
   });
 
   socket.on("error", (error) => {

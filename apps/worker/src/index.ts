@@ -4,6 +4,7 @@ import pino from "pino";
 
 import { env } from "./config/env.js";
 import { startDemoModeSupervisor } from "./demo/demo-generator.js";
+import { startHealthServer } from "./lib/health-server.js";
 import { redisConnection } from "./lib/redis-connection.js";
 import { startSyslogListener } from "./listeners/syslog-listener.js";
 import { startIngestionProcessor } from "./processors/ingestion-processor.js";
@@ -29,6 +30,7 @@ async function main(): Promise<void> {
   const { queue: reportsQueue, worker: reportsWorker } = await startScheduledReports(logger);
   const syslogSocket = await startSyslogListener(ingestionQueue, logger);
   const demoModeTimer = startDemoModeSupervisor(ingestionQueue, logger);
+  const healthServer = startHealthServer(env.HEALTH_PORT, logger);
 
   logger.info(
     "Worker fully started: ingestion queue, syslog listener, Demo Mode supervisor, notification delivery, scheduled reports.",
@@ -38,6 +40,7 @@ async function main(): Promise<void> {
     logger.info("Shutting down worker...");
     clearInterval(demoModeTimer);
     syslogSocket.close();
+    healthServer.close();
     await Promise.all([
       ingestionWorker.close(),
       notificationWorker.close(),

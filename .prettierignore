@@ -3,5 +3,11 @@ node_modules
 dist
 .turbo
 pnpm-lock.yaml
-legacy
 coverage
+
+# Helm chart templates are YAML-with-Go-template-directives, not valid
+# standalone YAML — Prettier's YAML parser chokes on the {{ }} syntax.
+deploy/helm/**/templates/**
+
+# Terraform has its own formatter (terraform fmt), already run/verified.
+deploy/terraform/**/*.tf

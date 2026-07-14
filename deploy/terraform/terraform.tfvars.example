@@ -1,0 +1,15 @@
+# Copy to terraform.tfvars (gitignored) and fill in — never commit real
+# values here. jwt_access_secret in particular should come from your
+# secrets manager or a generated value, not be typed into a file on disk:
+#   openssl rand -base64 48
+
+aws_region  = "us-east-1"
+environment = "dev"
+
+domain_name     = "" # e.g. "soc.example.com" — leave empty to skip Route53/ACM
+route53_zone_id = ""
+
+cors_origin       = "https://soc-dev.example.com"
+jwt_access_secret = "REPLACE_ME_32_CHARS_MINIMUM_xxxxxxxxxxxxxxxx"
+
+image_tag = "latest"

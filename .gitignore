@@ -57,4 +57,13 @@ logs
 *.tgz
 
 # Yarn Integrity file
-.yarn-integrity 
+.yarn-integrity
+
+# Terraform (.terraform.lock.hcl is NOT ignored — like a lockfile, it should be committed)
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+crash.log
+crash.*.log 

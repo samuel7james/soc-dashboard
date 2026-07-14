@@ -1,0 +1,143 @@
+# Default values for soc-platform. Environment-specific overrides live in
+# values-dev.yaml / values-staging.yaml / values-prod.yaml — layer them on
+# top of this file:
+#   helm install soc-platform . -f values.yaml -f values-prod.yaml
+
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  registry: ""
+  # Repository names match the Dockerfile's build targets (docker build
+  # --target api|worker|web) — set `registry` above and these combine into
+  # e.g. ghcr.io/your-org/soc-platform-api:1.2.3.
+  repository:
+    api: soc-platform-api
+    worker: soc-platform-worker
+    web: soc-platform-web
+  tag: "" # defaults to .Chart.AppVersion when empty
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# Non-secret configuration, rendered into a ConfigMap and mounted as env vars
+# on every workload. Secret values (DATABASE_URL, REDIS_URL,
+# JWT_ACCESS_SECRET) are deliberately NOT here — see `secret` below.
+config:
+  nodeEnv: production
+  logLevel: info
+  corsOrigin: "https://soc.example.com"
+  api:
+    port: 4000
+    host: "0.0.0.0"
+  worker:
+    healthPort: 8080
+    syslogUdpPort: 5514
+    syslogUdpHost: "0.0.0.0"
+    demoModePollIntervalMs: 5000
+
+# Secrets are never committed in plaintext. Two supported modes:
+#   1. existingSecret: point at a Secret you (or an operator like External
+#      Secrets / Sealed Secrets) already created in the namespace, containing
+#      keys DATABASE_URL, REDIS_URL, JWT_ACCESS_SECRET.
+#   2. values (local/dev/testing only): inline values here, which the chart
+#      turns into a real Secret object — never set these directly in a file
+#      that gets committed; pass them via `--set` or `-f` on a gitignored
+#      values file instead.
+secret:
+  existingSecret: ""
+  values:
+    databaseUrl: ""
+    redisUrl: ""
+    jwtAccessSecret: ""
+
+api:
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 192Mi
+    limits:
+      memory: 384Mi
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 4000
+
+worker:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 192Mi
+    limits:
+      memory: 384Mi
+  # Exposed only for kubelet probes / future Prometheus scraping, never
+  # routed to from outside the cluster.
+  service:
+    port: 8080
+
+web:
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 192Mi
+    limits:
+      memory: 384Mi
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 3000
+  env:
+    # Baked into the client JS bundle at image build time (see Dockerfile's
+    # NEXT_PUBLIC_API_URL build ARG) — changing this value alone at deploy
+    # time has no effect without rebuilding the web image.
+    publicApiUrl: "https://api.soc.example.com"
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+
+ingress:
+  enabled: false
+  className: nginx
+  annotations: {}
+  web:
+    host: soc.example.com
+  api:
+    host: api.soc.example.com
+  tls: []
+  # - secretName: soc-platform-tls
+  #   hosts:
+  #     - soc.example.com
+  #     - api.soc.example.com
+
+podAnnotations: {}
+podSecurityContext:
+  runAsNonRoot: true
+  # Must be numeric: the Dockerfile's `USER node` sets a *symbolic* user,
+  # and kubelet can't resolve a symbolic name against the image to verify
+  # runAsNonRoot — it fails the pod with CreateContainerConfigError instead
+  # of just trusting the image. 1000 is the node:*-slim images' fixed UID
+  # for that user (verified against the built image, not assumed).
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop: ["ALL"]
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

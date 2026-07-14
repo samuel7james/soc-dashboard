@@ -14,6 +14,7 @@ const envSchema = z.object({
   SYSLOG_UDP_PORT: z.coerce.number().int().positive().default(5514),
   SYSLOG_UDP_HOST: z.string().default("0.0.0.0"),
   DEMO_MODE_POLL_INTERVAL_MS: z.coerce.number().int().positive().default(5000),
+  HEALTH_PORT: z.coerce.number().int().positive().default(8080),
 });
 
 export type Env = z.infer<typeof envSchema>;

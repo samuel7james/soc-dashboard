@@ -1,0 +1,60 @@
+# Overlay for the production cluster environment.
+config:
+  logLevel: info
+  corsOrigin: "https://soc.example.com"
+
+api:
+  replicaCount: 3
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+
+worker:
+  # Deliberately kept at 1: BullMQ's per-job locking makes worker replicas
+  # safe to scale horizontally, but the syslog UDP listener and the Demo
+  # Mode supervisor are not designed to be duplicated across replicas today
+  # (multiple listeners would double-ingest the same datagrams, and multiple
+  # supervisors would race on the same IngestionSource row). Scaling this
+  # past 1 needs that work first, not just a replica count bump.
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+
+web:
+  replicaCount: 3
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+  env:
+    publicApiUrl: "https://api.soc.example.com"
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 8
+  targetCPUUtilizationPercentage: 65
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  web:
+    host: soc.example.com
+  api:
+    host: api.soc.example.com
+  tls:
+    - secretName: soc-platform-tls
+      hosts:
+        - soc.example.com
+        - api.soc.example.com

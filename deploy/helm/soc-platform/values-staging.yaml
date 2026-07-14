@@ -1,0 +1,54 @@
+# Overlay for the staging cluster environment.
+config:
+  logLevel: info
+  corsOrigin: "https://soc-staging.example.com"
+
+api:
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 192Mi
+    limits:
+      memory: 384Mi
+
+worker:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 192Mi
+    limits:
+      memory: 384Mi
+
+web:
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 192Mi
+    limits:
+      memory: 384Mi
+  env:
+    publicApiUrl: "https://api.soc-staging.example.com"
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 4
+  targetCPUUtilizationPercentage: 70
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-staging
+  web:
+    host: soc-staging.example.com
+  api:
+    host: api.soc-staging.example.com
+  tls:
+    - secretName: soc-platform-staging-tls
+      hosts:
+        - soc-staging.example.com
+        - api.soc-staging.example.com

@@ -1,0 +1,50 @@
+# Overlay for a dev/preview cluster environment. NODE_ENV stays "production"
+# even here — these are always the compiled Docker images from Phase 7, not
+# a `next dev`/`tsx watch` process; "dev" describes the cluster tier, not the
+# build. Layer on top of values.yaml:
+#   helm install soc-platform . -f values.yaml -f values-dev.yaml -f my-secrets.yaml
+
+config:
+  logLevel: debug
+  corsOrigin: "https://soc-dev.example.com"
+
+api:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 256Mi
+
+worker:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 256Mi
+
+web:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 256Mi
+  env:
+    publicApiUrl: "https://api.soc-dev.example.com"
+
+autoscaling:
+  enabled: false
+
+ingress:
+  enabled: true
+  className: nginx
+  web:
+    host: soc-dev.example.com
+  api:
+    host: api.soc-dev.example.com
+  tls: []
