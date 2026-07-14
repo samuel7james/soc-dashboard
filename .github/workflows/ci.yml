@@ -91,6 +91,14 @@ jobs:
       - name: Apply database migrations
         run: pnpm --filter @soc/database exec prisma migrate deploy
 
+      - name: Seed reference data
+        # Several tests create AlertMitreMapping rows, which have a real FK
+        # constraint to mitre_techniques — migrate deploy only applies
+        # schema, it doesn't populate that table. The seed script is fully
+        # idempotent (upserts/existence-guarded throughout), safe to run
+        # against a fresh CI database every time.
+        run: pnpm --filter @soc/database db:seed
+
       - name: Run tests with coverage
         run: pnpm test:coverage
 
