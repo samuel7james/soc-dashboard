@@ -136,7 +136,11 @@ jobs:
           cache-to: type=gha,mode=max,scope=${{ matrix.target }}
 
       - name: Scan image with Trivy
-        uses: aquasecurity/trivy-action@0.24.0
+        # Pinned to a commit SHA, not just the v0.36.0 tag: this action had a
+        # real supply-chain incident in March 2026 where an attacker
+        # force-pushed 75 of 76 version tags to try to steal CI/CD secrets.
+        # A tag can be moved again; a commit SHA can't.
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: soc-platform/${{ matrix.target }}:scan
           format: sarif

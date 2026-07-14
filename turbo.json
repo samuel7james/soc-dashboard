@@ -17,11 +17,37 @@
       "dependsOn": ["^build"]
     },
     "test": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build"],
+      "env": [
+        "NODE_ENV",
+        "DATABASE_URL",
+        "REDIS_URL",
+        "JWT_ACCESS_SECRET",
+        "LOG_LEVEL",
+        "CORS_ORIGIN",
+        "PORT",
+        "HOST",
+        "SYSLOG_UDP_PORT",
+        "SYSLOG_UDP_HOST",
+        "DEMO_MODE_POLL_INTERVAL_MS"
+      ]
     },
     "test:coverage": {
       "dependsOn": ["^build"],
-      "outputs": ["coverage/**"]
+      "outputs": ["coverage/**"],
+      "env": [
+        "NODE_ENV",
+        "DATABASE_URL",
+        "REDIS_URL",
+        "JWT_ACCESS_SECRET",
+        "LOG_LEVEL",
+        "CORS_ORIGIN",
+        "PORT",
+        "HOST",
+        "SYSLOG_UDP_PORT",
+        "SYSLOG_UDP_HOST",
+        "DEMO_MODE_POLL_INTERVAL_MS"
+      ]
     },
     "clean": {
       "cache": false
