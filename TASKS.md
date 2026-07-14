@@ -28,7 +28,7 @@ Tracks every implementation task grouped by phase, per `PROJECT_PLAN.md`. Checke
 - [x] Environment/config management: `.env.example` in both apps, Zod-validated typed env loader in the API
 - [x] Base ESLint (flat config, typescript-eslint) + Prettier (with Tailwind class sorting) + TypeScript strict (`noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`) enforced across every workspace package
 - [x] Verified end-to-end: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build` all pass; booted both dev servers and confirmed `/overview` renders, `/` redirects, and the web app's live API-status indicator successfully calls the Fastify `/health` endpoint cross-origin
-- [ ] Remove legacy `api/`, `frontend/`, `backend/` (now under `legacy/`) once Phase 5 reaches feature parity
+- [x] Removed `legacy/` entirely after Phase 5 reached and exceeded feature parity (real alerts/incidents/assets/vulnerabilities/threat-intel/hunting/audit-logs/notifications/reports backed by a real ingestion pipeline, vs. the original bash-script `Math.random()` demo)
 
 ## Phase 3 — Authentication & Security
 

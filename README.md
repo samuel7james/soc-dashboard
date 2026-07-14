@@ -2,7 +2,7 @@
 
 An enterprise-grade Security Operations Center platform, in active rebuild. See [`PROJECT_PLAN.md`](PROJECT_PLAN.md) for the full architecture/audit and [`TASKS.md`](TASKS.md) for phase-by-phase progress.
 
-The original bash-script-driven demo (Express + vanilla JS, `Math.random()`-backed "live" data) has been moved to [`legacy/`](legacy/) and is being replaced incrementally by the monorepo below. It still runs standalone via `node legacy/api/api_server.js` if needed for reference.
+The original bash-script-driven demo (Express + vanilla JS, `Math.random()`-backed "live" data) has been fully replaced by the monorepo below, which now exceeds its feature set with real data end to end.
 
 ## Monorepo layout
 
@@ -10,13 +10,14 @@ The original bash-script-driven demo (Express + vanilla JS, `Math.random()`-back
 apps/
   web/          Next.js (App Router, TypeScript strict, Tailwind, shadcn-style UI)
   api/          Fastify API (TypeScript strict, Zod validation, Pino logging, auth)
+  worker/       BullMQ worker: ingestion pipeline, Demo Mode, scheduled jobs
 packages/
   types/        Shared Zod schemas + inferred types, consumed by both apps
   ui/           Shared design tokens, theme provider, and cross-cutting components
   auth/         Password hashing (argon2id) and JWT/refresh-token primitives
   database/     Prisma schema, migrations, seed script
+  connectors/   Ingestion parsers (syslog, CSV) and detection rules, shared by api + worker
   config/       Shared base tsconfig
-legacy/         Pre-rebuild application (Express + bash scripts), kept for reference
 ```
 
 ## Requirements

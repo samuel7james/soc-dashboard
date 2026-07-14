@@ -38,8 +38,8 @@ async function getOrCreateDemoSource(): Promise<{ id: string; isActive: boolean 
 
 // Demo Mode is off by default and only ever labeled as such in the UI — it
 // exists so the platform is explorable without real telemetry connected, not
-// to masquerade as live data (see legacy/'s Math.random() approach, which
-// this deliberately does not repeat).
+// to masquerade as live data (the original app's Math.random()-backed "live"
+// data was exactly this anti-pattern, which this deliberately does not repeat).
 export function startDemoModeSupervisor(queue: Queue<IngestionJobData>, logger: Logger): NodeJS.Timeout {
   let generatorInterval: NodeJS.Timeout | null = null;
   let sourceId: string | null = null;
