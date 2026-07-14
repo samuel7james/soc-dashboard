@@ -8,9 +8,11 @@ import {
 import { z } from "zod";
 
 import { toPaginatedResult, toSkipTake } from "../../lib/pagination.js";
+import { publishRealtimeEvent } from "../../lib/realtime.js";
 import { stripUndefined } from "../../lib/strip-undefined.js";
 import { requireAuth, requireRole } from "../../plugins/rbac.js";
 import { recordAuditLog } from "../../services/audit-service.js";
+import { notifyUser } from "../../services/notification-service.js";
 import type { TypedApp } from "../../app.js";
 
 const idParamsSchema = z.object({ id: z.string().uuid() });
@@ -86,6 +88,8 @@ export async function registerIncidentRoutes(app: TypedApp): Promise<void> {
         metadata: { severity: incident.severity },
       });
 
+      await publishRealtimeEvent({ type: "incident.created", data: incident });
+
       reply.status(201);
       return incident;
     },
@@ -133,6 +137,15 @@ export async function registerIncidentRoutes(app: TypedApp): Promise<void> {
         ipAddress: request.ip,
         metadata: { status: incident.status },
       });
+
+      if (request.body.assignedToId && request.body.assignedToId !== existing.assignedToId) {
+        await notifyUser({
+          userId: request.body.assignedToId,
+          type: "incident",
+          title: "Incident assigned to you",
+          message: incident.title,
+        });
+      }
 
       return incident;
     },

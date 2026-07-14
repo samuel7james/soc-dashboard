@@ -3,9 +3,11 @@ import { alertListQuerySchema, createAlertSchema, updateAlertSchema } from "@soc
 import { z } from "zod";
 
 import { toPaginatedResult, toSkipTake } from "../../lib/pagination.js";
+import { publishRealtimeEvent } from "../../lib/realtime.js";
 import { stripUndefined } from "../../lib/strip-undefined.js";
 import { requireAuth, requireRole } from "../../plugins/rbac.js";
 import { recordAuditLog } from "../../services/audit-service.js";
+import { notifyUser } from "../../services/notification-service.js";
 import type { TypedApp } from "../../app.js";
 
 const idParamsSchema = z.object({ id: z.string().uuid() });
@@ -84,6 +86,8 @@ export async function registerAlertRoutes(app: TypedApp): Promise<void> {
         metadata: { severity: alert.severity },
       });
 
+      await publishRealtimeEvent({ type: "alert.created", data: serializeAlert(alert) });
+
       reply.status(201);
       return serializeAlert(alert);
     },
@@ -131,6 +135,15 @@ export async function registerAlertRoutes(app: TypedApp): Promise<void> {
         ipAddress: request.ip,
         metadata: { status: alert.status },
       });
+
+      if (rest.assignedToId && rest.assignedToId !== existing.assignedToId) {
+        await notifyUser({
+          userId: rest.assignedToId,
+          type: "alert",
+          title: "Alert assigned to you",
+          message: alert.title,
+        });
+      }
 
       return serializeAlert(alert);
     },

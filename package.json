@@ -31,9 +31,13 @@
       "@prisma/client",
       "@prisma/engines",
       "esbuild",
+      "msgpackr-extract",
       "prisma",
       "sharp",
       "unrs-resolver"
-    ]
+    ],
+    "overrides": {
+      "ioredis": "5.10.1"
+    }
   }
 }

@@ -4,6 +4,7 @@ import { LogOut, Menu, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 
+import { NotificationsBell } from "@/components/layout/notifications-bell";
 import { Button } from "@/components/ui/button";
 import { usePlatformStatus } from "@/lib/api/use-platform-status";
 import { useCurrentUser, useLogout } from "@/lib/api/use-auth";
@@ -42,6 +43,7 @@ export function Topbar() {
             {currentUser.user.email} · {currentUser.user.role}
           </span>
         )}
+        <NotificationsBell />
         <Button
           variant="ghost"
           size="icon"

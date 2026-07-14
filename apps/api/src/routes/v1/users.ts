@@ -2,7 +2,7 @@ import { hashPassword } from "@soc/auth";
 import { prisma } from "@soc/database";
 import { createUserSchema } from "@soc/types";
 
-import { requireRole } from "../../plugins/rbac.js";
+import { requireAuth, requireRole } from "../../plugins/rbac.js";
 import { recordAuditLog } from "../../services/audit-service.js";
 import type { TypedApp } from "../../app.js";
 
@@ -16,7 +16,9 @@ const PUBLIC_USER_FIELDS = {
 } as const;
 
 export async function registerUserRoutes(app: TypedApp): Promise<void> {
-  app.get("/", { preHandler: requireRole("owner", "admin") }, async () => {
+  // Directory-style read (name/email/role, no secrets) — any authenticated
+  // user needs this to populate assignee pickers on alerts/incidents.
+  app.get("/", { preHandler: requireAuth }, async () => {
     const items = await prisma.user.findMany({
       select: PUBLIC_USER_FIELDS,
       orderBy: { createdAt: "asc" },

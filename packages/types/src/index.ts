@@ -7,3 +7,7 @@ export * from "./vulnerability.js";
 export * from "./ioc.js";
 export * from "./mitre.js";
 export * from "./incident.js";
+export * from "./audit-log.js";
+export * from "./notification.js";
+export * from "./dashboard.js";
+export * from "./raw-event.js";

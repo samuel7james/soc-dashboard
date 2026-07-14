@@ -1,9 +1,11 @@
 import cookie from "@fastify/cookie";
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
+import multipart from "@fastify/multipart";
 import rateLimit from "@fastify/rate-limit";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
+import websocket from "@fastify/websocket";
 import Fastify from "fastify";
 import type { FastifyError, FastifyReply, FastifyRequest } from "fastify";
 import { jsonSchemaTransform, serializerCompiler, validatorCompiler } from "fastify-type-provider-zod";
@@ -16,6 +18,7 @@ import csrfPlugin from "./plugins/csrf.js";
 import { registerAuthRoutes } from "./routes/auth.js";
 import { registerHealthRoutes } from "./routes/health.js";
 import { registerV1Routes } from "./routes/v1/index.js";
+import { registerWebSocketRoute } from "./routes/ws.js";
 
 const loggerOptions =
   env.NODE_ENV === "test"
@@ -77,12 +80,15 @@ export function buildApp() {
   }
 
   app.register(cookie);
+  app.register(multipart, { limits: { fileSize: 5 * 1024 * 1024, files: 1 } });
+  app.register(websocket);
   app.register(authenticatePlugin);
   app.register(csrfPlugin);
 
   app.register(registerHealthRoutes);
   app.register(registerAuthRoutes, { prefix: "/api/v1/auth" });
   app.register(registerV1Routes, { prefix: "/api/v1" });
+  app.register(registerWebSocketRoute);
 
   app.setErrorHandler((error: FastifyError | ZodError, request: FastifyRequest, reply: FastifyReply) => {
     if (error instanceof ZodError) {

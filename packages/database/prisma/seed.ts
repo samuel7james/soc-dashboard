@@ -38,6 +38,22 @@ async function seedMitreTechniques(): Promise<void> {
   console.log(`Seeded ${mitreTechniques.length} MITRE ATT&CK techniques.`);
 }
 
+async function seedIngestionSources(): Promise<void> {
+  const sources: { name: string; type: "syslog" | "file_upload" | "demo_generator" }[] = [
+    { name: "Syslog UDP Listener", type: "syslog" },
+    { name: "File Upload", type: "file_upload" },
+    { name: "Demo Mode Generator", type: "demo_generator" },
+  ];
+
+  for (const source of sources) {
+    const existing = await prisma.ingestionSource.findFirst({ where: { type: source.type } });
+    if (!existing) {
+      await prisma.ingestionSource.create({ data: { name: source.name, type: source.type, isActive: false } });
+    }
+  }
+  console.log("Seeded canonical ingestion sources (syslog, file_upload, demo_generator).");
+}
+
 async function seedDemoDomainData(ownerId: string): Promise<void> {
   const existingAssetCount = await prisma.asset.count();
   if (existingAssetCount > 0) {
@@ -354,6 +370,7 @@ async function seedDemoDomainData(ownerId: string): Promise<void> {
 async function main(): Promise<void> {
   const ownerId = await seedOwner();
   await seedMitreTechniques();
+  await seedIngestionSources();
   await seedDemoDomainData(ownerId);
 }
 

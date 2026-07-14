@@ -48,5 +48,35 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
     throw new ApiError(message, response.status);
   }
 
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
+  return (await response.json()) as T;
+}
+
+// Separate from apiFetch because FormData needs the browser to set its own
+// multipart boundary in Content-Type — apiFetch always forces application/json.
+export async function apiUpload<T>(path: string, formData: FormData): Promise<T> {
+  const headers: Record<string, string> = {};
+  const csrfToken = readCookie("csrf_token");
+  if (csrfToken) headers["X-CSRF-Token"] = csrfToken;
+
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method: "POST",
+    body: formData,
+    credentials: "include",
+    headers,
+  });
+
+  if (!response.ok) {
+    const body: unknown = await response.json().catch(() => null);
+    const message =
+      body && typeof body === "object" && "message" in body && typeof body.message === "string"
+        ? body.message
+        : `Upload to ${path} failed with status ${response.status}`;
+    throw new ApiError(message, response.status);
+  }
+
   return (await response.json()) as T;
 }

@@ -66,17 +66,28 @@ Tracks every implementation task grouped by phase, per `PROJECT_PLAN.md`. Checke
 
 ## Phase 5 — Core SOC Platform
 
-- [ ] Executive Dashboard (real aggregate queries, not random data)
-- [ ] Alerts queue + triage workflow (assign, acknowledge, resolve, false-positive)
-- [ ] Incident Management (create from alert(s), timeline, notes, assignment, status workflow)
-- [ ] Threat Intelligence feed view + IOC CRUD/search
-- [ ] Asset Inventory (CRUD, criticality tagging)
-- [ ] Vulnerability Management (CRUD, severity, linked assets)
-- [ ] MITRE ATT&CK mapping UI (matrix view, alert→technique linkage)
-- [ ] Threat Hunting query interface (structured query over `RawEvent`)
-- [ ] Auth/Audit Logs viewer (searchable, filterable)
-- [ ] Reports (on-demand generation; scheduled generation via worker)
-- [ ] Notifications (in-app; email/webhook via worker)
+### Milestone 1 — frontend wired to real data (complete)
+
+- [x] API additions needed by the UI: `GET /dashboard/summary` (real aggregates), `GET /audit-logs` (owner/admin), `GET/POST /notifications` (+ `/read-all`), `GET /hunting/raw-events` + `/hunting/sources`, `GET /reports/export` (on-demand CSV/JSON); relaxed `GET /users` from owner/admin-only to any authenticated role since assignee pickers need it
+- [x] Frontend data layer: a `createResourceHooks` factory (list/detail/create/update/delete via TanStack Query) shared across alerts/incidents/assets/vulnerabilities/IOCs instead of six hand-written copies
+- [x] Shared UI: Table/Select/Dialog/DropdownMenu/Tabs/Textarea/Badge/Skeleton primitives (Radix-based, shadcn conventions), `PaginationBar`, `StatusBadge`, empty/error/loading states
+- [x] Executive Dashboard: real aggregate counts, severity breakdown bars, 5 most recent alerts — no mock data
+- [x] Alerts: paginated/filterable queue, detail dialog (description, MITRE techniques), status/assignment actions gated by role (read_only view-only)
+- [x] Incident Management: create (optionally linking existing alerts), detail dialog with editable status/assignee, linked-alerts list, timeline with note-adding
+- [x] Asset Inventory: paginated list, create dialog, delete (owner/admin only)
+- [x] Vulnerability Management: paginated list, create dialog (linked to an asset), inline status editing
+- [x] Threat Intelligence: IOC list + create dialog, tabbed alongside the MITRE matrix below
+- [x] MITRE ATT&CK matrix: tactics-as-columns view, techniques highlighted with a live alert-count badge (client-side aggregation over the alert list — a documented interim approach pending a dedicated aggregate endpoint at higher alert volume)
+- [x] Threat Hunting: structured filters (source IP, ingestion source) over `RawEvent`; honest empty state pointing at ingestion/Demo Mode rather than fake data
+- [x] Audit Logs viewer: owner/admin-gated, filterable by action, actor resolved to email
+- [x] Notifications: bell dropdown in the topbar with unread badge, mark-one/mark-all-read; server-side hook fires on alert/incident assignment
+- [x] Reports: on-demand CSV/JSON export (alerts/incidents/vulnerabilities/assets) — a real, working, simple implementation instead of a speculative persisted `Report` entity + scheduling UI built ahead of need
+- [x] Fixed a Turbopack/Windows transient crash (cleared `.next` cache) hit during verification — unrelated to app code
+- [x] Fixed a flaky test (`dashboard-notifications.test.ts`) caused by asserting exact equality against shared DB state read outside the request — replaced with a before/after bracket
+- [x] Live-verified every new page in a real browser (Playwright): dashboard, alerts + detail dialog, incidents + detail dialog, assets, vulnerabilities, threat intel indicators + MITRE matrix, audit logs, notifications bell, hunting empty state, and a real CSV export download
+
+### Milestone 2 — ingestion, worker, Demo Mode, realtime (not started)
+
 - [ ] Ingestion connector interface (`packages/connectors`)
 - [ ] **Real** ingestion connector #1: syslog UDP/TCP listener
 - [ ] **Real** ingestion connector #2: JSON/CSV upload
