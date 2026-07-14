@@ -12,12 +12,17 @@ export const rawEventSchema = z.object({
 });
 export type RawEvent = z.infer<typeof rawEventSchema>;
 
-export const rawEventListQuerySchema = paginatedQuerySchema.extend({
-  ingestionSourceId: z.string().uuid().optional(),
-  sourceIp: z.string().optional(),
-  normalizedType: z.string().optional(),
-  since: z.string().optional(),
-});
+export const rawEventListQuerySchema = paginatedQuerySchema
+  .extend({
+    ingestionSourceId: z.string().uuid().optional(),
+    sourceIp: z.string().optional(),
+    normalizedType: z.string().optional(),
+    since: z.string().optional(),
+  })
+  // Hunting queries scan through raw telemetry rather than triage a queue —
+  // the frontend renders this via a virtualized table, so a much larger page
+  // size than the shared 100-row cap is safe to request in one round trip.
+  .extend({ pageSize: z.coerce.number().int().min(1).max(500).default(100) });
 export type RawEventListQuery = z.infer<typeof rawEventListQuerySchema>;
 
 export const ingestionSourceSchema = z.object({

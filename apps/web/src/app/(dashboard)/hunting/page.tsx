@@ -1,5 +1,6 @@
 "use client";
 
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { Sparkles, Upload } from "lucide-react";
 import { type ChangeEvent, useRef, useState } from "react";
 
@@ -10,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import type { RawEvent } from "@soc/types";
 import {
   useIngestionSources,
   useRawEvents,
@@ -18,6 +19,87 @@ import {
   useUploadTelemetryFile,
 } from "@/lib/api/hunting";
 import { useCurrentUser } from "@/lib/api/use-auth";
+
+const ROW_HEIGHT_PX = 40;
+const VIEWPORT_HEIGHT_PX = 480;
+const PAGE_SIZE_OPTIONS = [25, 100, 500] as const;
+const GRID_COLUMNS = "180px 120px 160px minmax(0, 1fr)";
+
+// Hunting queries scan through raw telemetry rather than triage a small
+// queue — a page can hold up to 500 rows (see rawEventListQuerySchema), so
+// the body is virtualized (only the visible slice is ever mounted). Built as
+// a CSS grid rather than a real <table>: absolutely-positioned virtualized
+// rows can't share column widths through the browser's table layout
+// algorithm (each row would size its own columns independently and rows
+// would visually overlap), but a shared grid-template-columns keeps every
+// row's columns aligned with the header regardless of position.
+function RawEventsTable({ items }: { items: RawEvent[] }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const virtualizer = useVirtualizer({
+    count: items.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => ROW_HEIGHT_PX,
+    overscan: 10,
+  });
+
+  return (
+    <div ref={scrollRef} role="table" style={{ height: VIEWPORT_HEIGHT_PX, overflow: "auto" }}>
+      <div
+        role="row"
+        className="border-border bg-card text-muted-foreground sticky top-0 z-10 grid border-b text-xs font-medium"
+        style={{ gridTemplateColumns: GRID_COLUMNS }}
+      >
+        <div role="columnheader" className="px-4 py-2">
+          Received
+        </div>
+        <div role="columnheader" className="px-4 py-2">
+          Type
+        </div>
+        <div role="columnheader" className="px-4 py-2">
+          Source IP
+        </div>
+        <div role="columnheader" className="px-4 py-2">
+          Payload
+        </div>
+      </div>
+      <div style={{ height: virtualizer.getTotalSize(), position: "relative" }}>
+        {virtualizer.getVirtualItems().map((virtualRow) => {
+          const event = items[virtualRow.index]!;
+          return (
+            <div
+              key={event.id}
+              role="row"
+              data-index={virtualRow.index}
+              className="border-border/60 hover:bg-accent/50 grid items-center border-b text-sm"
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: virtualRow.size,
+                transform: `translateY(${virtualRow.start}px)`,
+                gridTemplateColumns: GRID_COLUMNS,
+              }}
+            >
+              <div role="cell" className="text-muted-foreground truncate px-4">
+                {new Date(event.receivedAt).toLocaleString()}
+              </div>
+              <div role="cell" className="text-muted-foreground truncate px-4">
+                {event.normalizedType ?? "—"}
+              </div>
+              <div role="cell" className="truncate px-4 font-mono text-xs">
+                {event.sourceIp ?? "—"}
+              </div>
+              <div role="cell" className="text-muted-foreground truncate px-4 font-mono text-xs">
+                {JSON.stringify(event.payload)}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 function IngestionSourcesPanel() {
   const { data: sources } = useIngestionSources();
@@ -95,13 +177,14 @@ function UploadButton() {
 
 export default function HuntingPage() {
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<(typeof PAGE_SIZE_OPTIONS)[number]>(100);
   const [sourceIp, setSourceIp] = useState("");
   const [ingestionSourceId, setIngestionSourceId] = useState("");
 
   const { data: sources } = useIngestionSources();
   const { data, isPending, isError } = useRawEvents({
     page,
-    pageSize: 25,
+    pageSize,
     ...(sourceIp ? { sourceIp } : {}),
     ...(ingestionSourceId ? { ingestionSourceId } : {}),
   });
@@ -147,6 +230,24 @@ export default function HuntingPage() {
             ))}
           </SelectContent>
         </Select>
+        <Select
+          value={String(pageSize)}
+          onValueChange={(v) => {
+            setPageSize(Number(v) as (typeof PAGE_SIZE_OPTIONS)[number]);
+            setPage(1);
+          }}
+        >
+          <SelectTrigger className="w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {PAGE_SIZE_OPTIONS.map((size) => (
+              <SelectItem key={size} value={String(size)}>
+                {size} rows / page
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="border-border rounded-lg border">
@@ -158,30 +259,7 @@ export default function HuntingPage() {
 
         {data && data.items.length > 0 && (
           <>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Received</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Source IP</TableHead>
-                  <TableHead>Payload</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.items.map((event) => (
-                  <TableRow key={event.id}>
-                    <TableCell className="text-muted-foreground">
-                      {new Date(event.receivedAt).toLocaleString()}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">{event.normalizedType ?? "—"}</TableCell>
-                    <TableCell className="font-mono text-xs">{event.sourceIp ?? "—"}</TableCell>
-                    <TableCell className="text-muted-foreground max-w-md truncate font-mono text-xs">
-                      {JSON.stringify(event.payload)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <RawEventsTable items={data.items} />
             <PaginationBar
               page={data.page}
               pageSize={data.pageSize}

@@ -11,3 +11,4 @@ export * from "./audit-log.js";
 export * from "./notification.js";
 export * from "./dashboard.js";
 export * from "./raw-event.js";
+export * from "./analytics.js";

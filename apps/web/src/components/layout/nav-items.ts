@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   Activity,
   AlertTriangle,
+  BarChart3,
   FileText,
   Globe2,
   LayoutDashboard,
@@ -19,6 +20,7 @@ export interface NavItem {
 
 export const navItems: NavItem[] = [
   { href: "/overview", label: "Overview", icon: LayoutDashboard },
+  { href: "/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/alerts", label: "Alerts", icon: AlertTriangle },
   { href: "/incidents", label: "Incidents", icon: ShieldAlert },
   { href: "/threat-intel", label: "Threat Intelligence", icon: Globe2 },

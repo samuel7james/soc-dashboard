@@ -17,3 +17,15 @@ export const severityLabel: Record<Severity, string> = {
   low: "Low",
   info: "Info",
 };
+
+// Hex equivalents of the Tailwind -500 shades used above, for contexts (chart
+// fills, SVG strokes) that need an actual color value rather than a class —
+// kept in lockstep with severityBadgeClasses so a severity reads identically
+// everywhere it appears.
+export const severityChartColor: Record<Severity, string> = {
+  critical: "#ef4444",
+  high: "#f97316",
+  medium: "#f59e0b",
+  low: "#10b981",
+  info: "#0ea5e9",
+};

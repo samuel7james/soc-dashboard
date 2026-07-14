@@ -1,4 +1,5 @@
 import { registerAlertRoutes } from "./alerts.js";
+import { registerAnalyticsRoutes } from "./analytics.js";
 import { registerAssetRoutes } from "./assets.js";
 import { registerAuditLogRoutes } from "./audit-logs.js";
 import { registerDashboardRoutes } from "./dashboard.js";
@@ -33,6 +34,7 @@ export async function registerV1Routes(app: TypedApp): Promise<void> {
   app.register(registerAuditLogRoutes, { prefix: "/audit-logs" });
   app.register(registerNotificationRoutes, { prefix: "/notifications" });
   app.register(registerDashboardRoutes, { prefix: "/dashboard" });
+  app.register(registerAnalyticsRoutes, { prefix: "/analytics" });
   app.register(registerHuntingRoutes, { prefix: "/hunting" });
   app.register(registerReportRoutes, { prefix: "/reports" });
   app.register(registerIngestRoutes, { prefix: "/ingest" });

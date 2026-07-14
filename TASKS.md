@@ -101,14 +101,19 @@ Tracks every implementation task grouped by phase, per `PROJECT_PLAN.md`. Checke
 
 ## Phase 6 — Advanced Analytics
 
-- [ ] Executive analytics dashboard (trends over time, not just point-in-time counts)
-- [ ] Interactive charts (Recharts) replacing all Chart.js/CDN usage
-- [ ] Attack timeline visualization
-- [ ] Heatmap (e.g. alerts by hour/day, MITRE technique frequency)
-- [ ] Risk analytics (asset risk scoring)
-- [ ] Threat trend analysis views
-- [ ] Detection analytics (rule/source effectiveness)
-- [ ] Table virtualization for large datasets (`@tanstack/react-virtual`)
+- [x] New `/api/v1/analytics/*` endpoints, all real Postgres aggregates (Prisma `groupBy` + a few `$queryRaw` `date_trunc`/`EXTRACT` queries for time-bucketing) — no derived/mocked numbers: `alerts-trend`, `heatmap`, `mitre-frequency`, `detection-effectiveness`, `asset-risk`, `timeline`
+- [x] Executive analytics dashboard: new `/analytics` page, 5 tabs (Trends, MITRE ATT&CK, Detection Effectiveness, Asset Risk, Attack Timeline) — trends over time, not just the point-in-time counts Overview already had
+- [x] Interactive charts via Recharts 3.x (this project never had Chart.js/CDN usage to begin with — Phase 5's dashboard already used hand-rolled severity bars; those stay as-is, Recharts is additive for the new time-series/frequency views)
+- [x] Attack timeline visualization: hand-built vertical timeline (not a Recharts type) merging alerts + incidents into one chronologically-sorted feed, severity-colored markers, MITRE tags
+- [x] Heatmap: alerts by day-of-week x hour-of-day, hand-built 7x24 grid (Recharts has no heatmap primitive), sequential single-hue ramp, every cell a focusable button with the exact count in its label (color is never the only channel)
+- [x] Risk analytics: deterministic 0-100 asset risk score from open vulnerabilities + unresolved alerts (by severity), scaled by the asset's declared criticality — documented formula in `analytics.ts`, not an opaque/ML score
+- [x] Threat trend analysis: daily alert volume stacked by severity (7/30/90/180-day presets), real gaps where there's no data rather than interpolated/faked history
+- [x] Detection analytics: per-ingestion-source conversion rate (raw events in vs. alerts out) and per-rule effectiveness (grouped by the title/severity each pattern-matching rule produces, honestly scoped to ingestion-sourced alerts only — rules aren't persisted DB entities in this architecture, documented in code)
+- [x] Table virtualization (`@tanstack/react-virtual`) applied to the Threat Hunting raw-events table, the one genuinely large/unbounded list in the app (bumped its page-size cap to 500); built as a CSS grid rather than reusing the semantic `<table>` components, since absolutely-positioned virtualized `<tr>`s can't share column widths through the browser's table layout algorithm — caught via Playwright screenshot showing overlapping rows, fixed, re-verified
+- [x] Chart color system: categorical 8-hue palette + a blue sequential ramp added as CSS custom properties (light/dark), validated with the dataviz skill's CVD/contrast/lightness-band checker against this app's actual card surfaces (not generic defaults); severity-coded charts reuse the existing `severityBadgeClasses` colors (`severityChartColor` in `@soc/ui`) rather than a second palette
+- [x] Added 6 integration tests for the analytics endpoints (`apps/api`, against the real local Postgres) covering trend bucketing, heatmap day/hour extraction, MITRE frequency counting, source conversion-rate math, the asset-risk formula (exact expected score asserted), and timeline chronological merge/sort
+- [x] Live-verified via Playwright: all 5 Analytics tabs with real seeded data, the 90-day trend range, and the Hunting page at both 100-row and 500-row page sizes
+- [x] Full workspace verification: `pnpm lint` / `typecheck` / `test` / `build` clean across all 9 packages
 
 ## Phase 7 — DevSecOps
 
