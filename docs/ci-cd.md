@@ -1,8 +1,6 @@
 # CI/CD
 
-Two workflows live under `.github/workflows/`. Neither has run on GitHub yet —
-this repository hasn't been pushed there (see the project's standing local-only
-constraint) — but both are written to run as-is the first time it is.
+Two workflows live under `.github/workflows/`.
 
 ## `ci.yml`
 
@@ -27,14 +25,14 @@ Triggers on push to `main`, pull requests, and a weekly Monday-morning cron
 (so newly-disclosed CVEs in existing dependencies get caught even in weeks
 with no code changes).
 
-| Job          | What it does                                                                             |
-| ------------ | ---------------------------------------------------------------------------------------- |
-| `codeql`     | GitHub's native SAST for the JS/TS codebase                                              |
-| `semgrep`    | `semgrep scan --config auto` (community ruleset — no Semgrep account needed)             |
-| `gitleaks`   | Full-history secret scan                                                                 |
-| `pnpm-audit` | `pnpm audit --audit-level=high` — fails the job on any high/critical advisory            |
-| `sbom`       | Generates a CycloneDX SBOM via Syft, uploaded as an artifact                             |
-| `trivy`      | Builds each of the 3 Docker images locally and scans for CRITICAL/HIGH CVEs (matrix job) |
+| Job           | What it does                                                                                                       |
+| ------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `codeql`      | GitHub's native SAST for the JS/TS codebase                                                                        |
+| `semgrep`     | `semgrep scan --config auto` (community ruleset — no Semgrep account needed)                                       |
+| `gitleaks`    | Full-history secret scan                                                                                           |
+| `osv-scanner` | Scans `pnpm-lock.yaml` against the OSV.dev database (reusable workflow) — fails the job on any known vulnerability |
+| `sbom`        | Generates a CycloneDX SBOM via Syft, uploaded as an artifact                                                       |
+| `trivy`       | Builds each of the 3 Docker images locally and scans for CRITICAL/HIGH CVEs (matrix job)                           |
 
 CodeQL, Semgrep, and Trivy findings all upload as SARIF to GitHub's Security
 tab via `github/codeql-action/upload-sarif` — they show up in one place
@@ -43,13 +41,20 @@ regardless of which tool found them.
 ### Dependency audit baseline
 
 Phase 1's initial audit found 11 vulnerabilities (6 high, 5 moderate). As of
-Phase 7, `pnpm audit` reports **zero** known vulnerabilities — the two real
+Phase 7, `pnpm audit` reported **zero** known vulnerabilities — the two real
 fixable issues found while wiring up this phase (a critical arbitrary-file-read
 in `vitest` <3.2.6, and a high-severity `vite` `server.fs.deny` bypass) were
 fixed directly: `vitest`/`@vitest/coverage-v8` bumped to `^3.2.6` across every
 package that runs tests, plus root-level `pnpm.overrides` forcing
 `vite >= 6.4.3` and `postcss >= 8.5.10` (the latter a transitive Next.js
 dependency).
+
+`pnpm audit` itself was later dropped from CI (see `osv-scanner` above): it
+called npm's legacy quick-audit endpoint, which the npm registry retired in
+favor of a bulk advisory endpoint, and that fix only landed in pnpm v11
+(which requires Node 22). OSV-Scanner replaced it without needing a runtime
+bump — re-verified locally against the current `pnpm-lock.yaml` (972
+packages) with zero issues found before switching.
 
 ## Dependabot
 
@@ -64,19 +69,22 @@ dependency).
 ## Branch protection (manual — requires GitHub repo admin access)
 
 This is a repository _setting_, not a file in the repo, so it can't be
-committed or configured from this environment. Once the repo is pushed and
-these workflows have run at least once (so their job names are known to
-GitHub), a repo admin should configure, under **Settings → Branches → Branch
-protection rules** for `main`:
+committed or configured from this environment. A repo admin should configure,
+under **Settings → Branches → Branch protection rules** (or the newer
+Rulesets UI) for `main`:
 
 - **Require a pull request before merging** (no direct pushes to `main`).
-- **Require status checks to pass before merging**, with these required checks:
+- **Require status checks to pass before merging**, with these required checks
+  (exact names as they appear in the Actions tab/PR checks list once a run
+  has completed — the `osv-scanner` job in particular reports under a name
+  derived from the reusable workflow, so confirm it there rather than
+  assuming the string below):
   - `Lint & Typecheck`
   - `Unit & Integration Tests`
   - `Build`
   - `Docker Build (api / worker / web)` (all 3 matrix legs)
   - `CodeQL`
-  - `pnpm audit`
+  - `OSV-Scanner (dependency vulnerabilities)`
   - `Trivy image scan` (all 3 matrix legs)
 - **Require branches to be up to date before merging.**
 - Optionally: require `gitleaks` and `Semgrep` too once their signal-to-noise

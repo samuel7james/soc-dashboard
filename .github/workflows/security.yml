@@ -70,26 +70,25 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  pnpm-audit:
-    name: pnpm audit
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Audit (fails on high/critical)
-        run: pnpm audit --audit-level=high
+  # `pnpm audit` called npm's legacy quick-audit endpoint
+  # (/-/npm/v1/security/audits), which the npm registry retired in favor of
+  # the bulk advisory endpoint — every pnpm 10.x release (including the
+  # 10.28.2 pinned above) hits a 410 Gone from that endpoint as of the
+  # retirement date. The fix lives in pnpm v11 (which queries the new bulk
+  # endpoint), but v11 requires Node 22, a much bigger bump than this CI job
+  # warrants on its own — OSV-Scanner scans pnpm-lock.yaml directly against
+  # the OSV.dev database and isn't affected by the npm registry endpoint
+  # retirement at all. Verified locally against this repo's actual
+  # pnpm-lock.yaml (972 packages, "No issues found") before wiring in here.
+  osv-scanner:
+    name: OSV-Scanner (dependency vulnerabilities)
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@9a498708959aeaef5ef730655706c5a1df1edbc2 # v2.3.8
+    with:
+      fail-on-vuln: true
 
   sbom:
     name: SBOM (CycloneDX)
