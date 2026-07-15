@@ -17,10 +17,12 @@ packages/
   auth/         Password hashing (argon2id) and JWT/refresh-token primitives
   database/     Prisma schema, migrations, seed script
   connectors/   Ingestion parsers (syslog, CSV) and detection rules, shared by api + worker
+  observability/ Custom OTel metric instruments (WS connections, ingestion lag, queue depth/failures)
   config/       Shared base tsconfig
 deploy/
   helm/         Kubernetes Helm chart (soc-platform)
   terraform/    AWS reference module (ECS Fargate, RDS, ElastiCache, S3)
+  observability/ OTel Collector, Prometheus, Tempo, Loki, Promtail, Grafana, Alertmanager configs
 ```
 
 ## Requirements
@@ -84,6 +86,25 @@ docker compose --profile full up --build
 
 See [`docs/ci-cd.md`](docs/ci-cd.md) for the CI/security pipeline this feeds into.
 
+## Observability
+
+API and worker are instrumented with OpenTelemetry (traces + metrics),
+exported to an OTel Collector that fans out to Prometheus (metrics) and Tempo
+(traces); Promtail ships Pino logs to Loki; Grafana ties all three together
+with pre-provisioned dashboards, and Prometheus Alertmanager handles SLO
+alerts. Bring the whole stack up alongside the app:
+
+```bash
+docker compose --profile full --profile observability up --build
+```
+
+- Grafana: <http://localhost:3001> (anonymous viewer access; dashboards under the "SOC Platform" folder)
+- Prometheus: <http://localhost:9090>
+- Alertmanager: <http://localhost:9093>
+- Tempo: <http://localhost:3200>
+
+See [`docs/observability.md`](docs/observability.md) for the full pipeline, dashboard list, and alerting rules.
+
 ## Infrastructure
 
 Two deployment paths, both consuming the same Docker images — see
@@ -98,7 +119,7 @@ Two deployment paths, both consuming the same Docker images — see
 
 ## Status
 
-Phase 8 (Infrastructure) is complete, on top of a fully functional core platform (Phases 4-7): the full frontend (dashboard, alert triage, incident workboard, asset inventory, vulnerability management, threat intel + MITRE ATT&CK matrix, threat hunting, audit logs, notifications, reports, advanced analytics) is wired up to the real API, the platform ingests real telemetry through a dedicated BullMQ worker app, and CI/security pipelines are written and ready for the first push (`pnpm audit`: zero known vulnerabilities, down from 11 at the Phase 1 baseline). Building the Kubernetes/Terraform deployment configs surfaced and fixed two real bugs no earlier phase had caught: the API's `/ready` endpoint didn't actually check its dependencies despite claiming to, and the worker crashed its entire process (not just the affected request) on any transient database hiccup. Both are fixed and live-verified — including watching the worker survive a real Postgres outage and self-recover with zero restarts. See `TASKS.md` for the live checklist.
+Phase 9 (Observability) is complete, on top of a fully functional core platform (Phases 4-8): the full frontend (dashboard, alert triage, incident workboard, asset inventory, vulnerability management, threat intel + MITRE ATT&CK matrix, threat hunting, audit logs, notifications, reports, advanced analytics) is wired up to the real API, the platform ingests real telemetry through a dedicated BullMQ worker app, and CI/security pipelines are written and ready for the first push (`pnpm audit`: zero known vulnerabilities, down from 11 at the Phase 1 baseline). Building the Kubernetes/Terraform deployment configs surfaced and fixed two real bugs no earlier phase had caught: the API's `/ready` endpoint didn't actually check its dependencies despite claiming to, and the worker crashed its entire process (not just the affected request) on any transient database hiccup. Both are fixed and live-verified — including watching the worker survive a real Postgres outage and self-recover with zero restarts. The OpenTelemetry/Prometheus/Tempo/Loki/Grafana stack was brought up end to end against real traffic (an actual login, file upload, WebSocket connection, and a deliberately-injected job failure) to confirm traces, metrics, and logs all genuinely flow rather than just being configured on paper. See `TASKS.md` for the live checklist.
 
 ## License
 

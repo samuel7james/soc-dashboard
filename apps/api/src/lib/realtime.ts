@@ -1,4 +1,5 @@
 import { REALTIME_CHANNEL, type RealtimeEvent } from "@soc/connectors";
+import { wsConnectionClosed, wsConnectionOpened } from "@soc/observability";
 import { Redis } from "ioredis";
 import type { WebSocket } from "ws";
 
@@ -27,7 +28,11 @@ if (subscriber) {
 
 export function registerRealtimeClient(socket: WebSocket): void {
   clients.add(socket);
-  socket.on("close", () => clients.delete(socket));
+  wsConnectionOpened();
+  socket.on("close", () => {
+    clients.delete(socket);
+    wsConnectionClosed();
+  });
 }
 
 export async function publishRealtimeEvent(event: RealtimeEvent): Promise<void> {

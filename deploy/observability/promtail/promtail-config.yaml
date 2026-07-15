@@ -1,0 +1,35 @@
+server:
+  http_listen_port: 9080
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  # Discovers every container on the host via the mounted Docker socket —
+  # picks up api/worker/web (and their Pino JSON stdout) without needing a
+  # per-service log path hardcoded here.
+  - job_name: docker
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+    relabel_configs:
+      - source_labels: [__meta_docker_container_name]
+        regex: "/(.*)"
+        target_label: container
+      - source_labels: [__meta_docker_container_label_com_docker_compose_service]
+        target_label: service
+    pipeline_stages:
+      # Unwraps the Docker JSON log-driver envelope to get at the raw
+      # application log line (Pino's own JSON) underneath.
+      - docker: {}
+      # Pino logs are single-line JSON — lift `level`/`msg` out as labels so
+      # Grafana can filter by level without a query-time JSON parse.
+      - json:
+          expressions:
+            level: level
+            msg: msg
+      - labels:
+          level:

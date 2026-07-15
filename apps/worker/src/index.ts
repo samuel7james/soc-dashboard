@@ -1,4 +1,10 @@
-import { INGESTION_QUEUE_NAME, type IngestionJobData } from "@soc/connectors";
+import {
+  INGESTION_QUEUE_NAME,
+  NOTIFICATION_DELIVERY_QUEUE_NAME,
+  SCHEDULED_REPORTS_QUEUE_NAME,
+  type IngestionJobData,
+} from "@soc/connectors";
+import { observeQueueDepth } from "@soc/observability";
 import { Queue } from "bullmq";
 import pino from "pino";
 
@@ -24,6 +30,9 @@ async function main(): Promise<void> {
   logger.info("Starting SOC Platform worker...");
 
   const ingestionQueue = new Queue<IngestionJobData>(INGESTION_QUEUE_NAME, { connection: redisConnection });
+  // No producer enqueues notification-delivery jobs yet (see the processor's
+  // own comment) — this instance exists purely so depth can be observed.
+  const notificationQueue = new Queue(NOTIFICATION_DELIVERY_QUEUE_NAME, { connection: redisConnection });
 
   const ingestionWorker = startIngestionProcessor(logger);
   const notificationWorker = startNotificationDeliveryProcessor(logger);
@@ -31,6 +40,10 @@ async function main(): Promise<void> {
   const syslogSocket = await startSyslogListener(ingestionQueue, logger);
   const demoModeTimer = startDemoModeSupervisor(ingestionQueue, logger);
   const healthServer = startHealthServer(env.HEALTH_PORT, logger);
+
+  observeQueueDepth(ingestionQueue, INGESTION_QUEUE_NAME);
+  observeQueueDepth(notificationQueue, NOTIFICATION_DELIVERY_QUEUE_NAME);
+  observeQueueDepth(reportsQueue, SCHEDULED_REPORTS_QUEUE_NAME);
 
   logger.info(
     "Worker fully started: ingestion queue, syslog listener, Demo Mode supervisor, notification delivery, scheduled reports.",
@@ -46,6 +59,7 @@ async function main(): Promise<void> {
       notificationWorker.close(),
       reportsWorker.close(),
       ingestionQueue.close(),
+      notificationQueue.close(),
       reportsQueue.close(),
     ]);
     await redisConnection.quit();

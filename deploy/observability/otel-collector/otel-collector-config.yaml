@@ -1,0 +1,38 @@
+# Single ingestion point for both apps (api + worker) — they only know about
+# this collector's OTLP endpoint, not about Tempo/Prometheus directly, so the
+# storage backends can be swapped without touching app config.
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch: {}
+
+exporters:
+  # Tempo speaks OTLP natively — forward traces to it unchanged.
+  otlphttp/tempo:
+    endpoint: http://tempo:4318
+    tls:
+      insecure: true
+  # Prometheus is pull-based, so metrics are exposed here for Prometheus to
+  # scrape (see prometheus.yml's scrape_configs) rather than pushed.
+  prometheus:
+    endpoint: 0.0.0.0:8889
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlphttp/tempo]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [prometheus]
+  telemetry:
+    logs:
+      level: info

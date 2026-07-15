@@ -1,0 +1,31 @@
+{
+  "title": "WebSocket Connections",
+  "uid": "soc-ws-connections",
+  "tags": ["soc-platform"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Currently open WebSocket connections",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 0 },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "targets": [{ "refId": "A", "expr": "sum(soc_ws_connections)" }]
+    },
+    {
+      "id": 2,
+      "title": "Open connections over time",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 16, "x": 8, "y": 0 },
+      "fieldConfig": {
+        "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 10 } },
+        "overrides": []
+      },
+      "targets": [{ "refId": "A", "expr": "sum(soc_ws_connections)", "legendFormat": "open connections" }]
+    }
+  ]
+}

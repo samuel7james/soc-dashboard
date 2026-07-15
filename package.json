@@ -35,6 +35,7 @@
       "esbuild",
       "msgpackr-extract",
       "prisma",
+      "protobufjs",
       "sharp",
       "unrs-resolver"
     ],

@@ -1,0 +1,56 @@
+# Metric names/labels here were verified against a live stack (docker
+# compose --profile full --profile observability), not assumed from docs —
+# see the OTel HTTP instrumentation's default (non-"stable") semantic
+# conventions, which is why these are e.g. `http_server_duration_milliseconds`
+# rather than the newer `http_server_request_duration_seconds`.
+groups:
+  - name: soc-platform-slo
+    rules:
+      - alert: APIHighLatencyP95
+        expr: >
+          histogram_quantile(0.95, sum(rate(http_server_duration_milliseconds_bucket[5m])) by (le)) > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "API p95 latency above 1s"
+          description: "p95 HTTP request duration has been above 1000ms for 5 minutes."
+
+      - alert: APIHighErrorRate
+        expr: >
+          sum(rate(http_server_duration_milliseconds_count{http_status_code=~"5.."}[5m]))
+            / sum(rate(http_server_duration_milliseconds_count[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "API 5xx error rate above 5%"
+          description: "More than 5% of HTTP responses have been 5xx over the last 5 minutes."
+
+      - alert: IngestionBacklogHigh
+        expr: >
+          histogram_quantile(0.95, sum(rate(soc_ingestion_lag_milliseconds_bucket[5m])) by (le)) > 10000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Ingestion queue lag above 10s (p95)"
+          description: "p95 time from job enqueue to processing start has been above 10s for 5 minutes — the ingestion worker may be under-provisioned or stalled."
+
+      - alert: QueueDepthHigh
+        expr: soc_queue_depth > 500
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Queue {{ $labels.queue }} depth above 500"
+          description: "{{ $labels.queue }} has had more than 500 waiting/active/delayed jobs for 10 minutes."
+
+      - alert: QueueJobFailuresFiring
+        expr: sum(rate(soc_queue_job_failures_total[5m])) by (queue) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Jobs failing on queue {{ $labels.queue }}"
+          description: "{{ $labels.queue }} has had a non-zero job failure rate for 5 minutes."

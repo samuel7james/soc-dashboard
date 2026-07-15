@@ -1,0 +1,14 @@
+# No outbound notification transport is configured in this environment (same
+# honest-stub approach as apps/worker's notification-delivery processor) —
+# the point here is real alert routing/grouping/dedup, not a fabricated
+# "paged the on-call" claim. Wire a receiver's real webhook_configs/
+# email_configs/etc. once a transport exists.
+route:
+  receiver: default
+  group_by: ["alertname"]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+
+receivers:
+  - name: default

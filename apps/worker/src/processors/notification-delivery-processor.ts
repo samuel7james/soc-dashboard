@@ -1,5 +1,6 @@
 import { NOTIFICATION_DELIVERY_QUEUE_NAME, type NotificationDeliveryJobData } from "@soc/connectors";
 import { prisma } from "@soc/database";
+import { recordQueueJobFailure } from "@soc/observability";
 import { Worker } from "bullmq";
 import type { Logger } from "pino";
 
@@ -25,6 +26,7 @@ export function startNotificationDeliveryProcessor(logger: Logger): Worker<Notif
   );
 
   worker.on("failed", (job, error) => {
+    recordQueueJobFailure(NOTIFICATION_DELIVERY_QUEUE_NAME);
     logger.error({ jobId: job?.id, err: error }, "notification delivery job failed");
   });
 

@@ -148,12 +148,12 @@ Tracks every implementation task grouped by phase, per `PROJECT_PLAN.md`. Checke
 
 ## Phase 9 — Observability
 
-- [ ] OpenTelemetry SDK wired into API + worker (traces + metrics)
-- [ ] OTel Collector → Prometheus + Tempo/Jaeger pipeline
-- [ ] Grafana dashboards (API latency p95, WS connections, ingestion lag, queue depth/failures)
-- [ ] Loki log aggregation for structured Pino logs
-- [ ] `/health` (liveness) and `/ready` (readiness) endpoints
-- [ ] Alerting rules for SLO breaches (Prometheus Alertmanager)
+- [x] OpenTelemetry SDK wired into API + worker (traces + metrics) via a plain `.mjs` preload (`apps/{api,worker}/otel/instrumentation.mjs`, loaded with `node --import`, not esbuild-bundled — bundling would inline `fastify`/`ioredis`/etc. before OTel's require-hook patching could intercept them) — `@opentelemetry/auto-instrumentations-node` + `@prisma/instrumentation`, plus a new `packages/observability` package for the metrics auto-instrumentation can't see (WS connections, ingestion lag, queue depth/failures)
+- [x] OTel Collector → Prometheus + Tempo pipeline (`deploy/observability/otel-collector`, `.../prometheus`, `.../tempo`) — verified live: brought up the full `--profile full --profile observability` stack, generated real HTTP/WS/ingestion/queue-failure traffic, and confirmed actual trace data in Tempo (fastify HTTP spans, Prisma query spans, ioredis spans) and actual metric data in Prometheus (`http_server_duration_milliseconds_*`, `soc_ws_connections`, `soc_ingestion_lag_milliseconds_*`, `soc_queue_depth`, `soc_queue_job_failures_total`) — exact metric names/labels confirmed against the live stack rather than assumed from docs
+- [x] Grafana dashboards (API latency p95, WS connections, ingestion lag, queue depth/failures) — `deploy/observability/grafana/dashboards/*.json`, auto-provisioned, verified rendering real (non-empty) data through Grafana's own datasource proxy, not just directly against Prometheus
+- [x] Loki log aggregation for structured Pino logs — Promtail (`deploy/observability/promtail`) discovers containers via the Docker socket and ships stdout to Loki; verified real Pino JSON log lines queryable in Loki with `service`/`container`/`level` labels
+- [x] `/health` (liveness) and `/ready` (readiness) endpoints — already satisfied by Phase 8 (`apps/api/src/routes/health.ts`, `apps/worker/src/lib/health-server.ts`)
+- [x] Alerting rules for SLO breaches (Prometheus Alertmanager) — `deploy/observability/prometheus/rules/soc-platform-alerts.yml` (API p95 latency, API 5xx rate, ingestion backlog, queue depth, queue failure rate) + `deploy/observability/alertmanager/alertmanager.yml`; confirmed all 5 rules loaded with `health: ok` against the live Prometheus, including one alert (`QueueJobFailuresFiring`) actually observed transitioning off a real injected failure (a deliberately invalid `ingestionSourceId` enqueued straight to Redis to trigger a genuine Prisma FK violation)
 
 ## Phase 10 — Testing & Optimization
 

@@ -36,6 +36,7 @@ COPY packages/ui/package.json packages/ui/package.json
 COPY packages/auth/package.json packages/auth/package.json
 COPY packages/database/package.json packages/database/package.json
 COPY packages/connectors/package.json packages/connectors/package.json
+COPY packages/observability/package.json packages/observability/package.json
 COPY packages/config/package.json packages/config/package.json
 # @prisma/client's postinstall generates the client during `pnpm install`
 # below — it needs the real schema present at that point, or it silently
@@ -85,10 +86,11 @@ COPY --from=build /repo/node_modules /repo/node_modules
 COPY --from=build /repo/apps/api/node_modules /repo/apps/api/node_modules
 COPY --from=build /repo/apps/api/package.json /repo/apps/api/package.json
 COPY --from=build /repo/apps/api/dist /repo/apps/api/dist
+COPY --from=build /repo/apps/api/otel /repo/apps/api/otel
 WORKDIR /repo/apps/api
 EXPOSE 4000
 USER node
-CMD ["node", "dist/index.js"]
+CMD ["node", "--import", "./otel/instrumentation.mjs", "dist/index.js"]
 
 # ================= worker =================
 FROM node:20-bookworm-slim AS worker
@@ -100,10 +102,11 @@ COPY --from=build /repo/node_modules /repo/node_modules
 COPY --from=build /repo/apps/worker/node_modules /repo/apps/worker/node_modules
 COPY --from=build /repo/apps/worker/package.json /repo/apps/worker/package.json
 COPY --from=build /repo/apps/worker/dist /repo/apps/worker/dist
+COPY --from=build /repo/apps/worker/otel /repo/apps/worker/otel
 WORKDIR /repo/apps/worker
 EXPOSE 5514/udp
 USER node
-CMD ["node", "dist/index.js"]
+CMD ["node", "--import", "./otel/instrumentation.mjs", "dist/index.js"]
 
 # ================= web =================
 FROM node:20-bookworm-slim AS web

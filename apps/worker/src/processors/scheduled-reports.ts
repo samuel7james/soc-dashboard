@@ -1,4 +1,5 @@
 import { SCHEDULED_REPORTS_QUEUE_NAME } from "@soc/connectors";
+import { recordQueueJobFailure } from "@soc/observability";
 import { Queue, Worker } from "bullmq";
 import type { Logger } from "pino";
 
@@ -27,6 +28,11 @@ export async function startScheduledReports(logger: Logger): Promise<{ queue: Qu
     },
     { connection: redisConnection },
   );
+
+  worker.on("failed", (job, error) => {
+    recordQueueJobFailure(SCHEDULED_REPORTS_QUEUE_NAME);
+    logger.error({ jobId: job?.id, err: error }, "scheduled report job failed");
+  });
 
   logger.info("Scheduled reports queue registered (daily-summary, no-op processor)");
   return { queue, worker };
