@@ -75,7 +75,7 @@ export default function AlertsPage() {
             setPage(1);
           }}
         >
-          <SelectTrigger className="w-44">
+          <SelectTrigger className="w-44" aria-label="Filter by status">
             <SelectValue placeholder="All statuses" />
           </SelectTrigger>
           <SelectContent>
@@ -95,7 +95,7 @@ export default function AlertsPage() {
             setPage(1);
           }}
         >
-          <SelectTrigger className="w-44">
+          <SelectTrigger className="w-44" aria-label="Filter by severity">
             <SelectValue placeholder="All severities" />
           </SelectTrigger>
           <SelectContent>

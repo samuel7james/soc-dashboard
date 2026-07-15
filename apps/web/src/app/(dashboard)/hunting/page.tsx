@@ -218,7 +218,7 @@ export default function HuntingPage() {
             setPage(1);
           }}
         >
-          <SelectTrigger className="w-56">
+          <SelectTrigger className="w-56" aria-label="Filter by ingestion source">
             <SelectValue placeholder="All ingestion sources" />
           </SelectTrigger>
           <SelectContent>
@@ -237,7 +237,7 @@ export default function HuntingPage() {
             setPage(1);
           }}
         >
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-40" aria-label="Rows per page">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

@@ -161,22 +161,28 @@ export async function registerAnalyticsRoutes(app: TypedApp): Promise<void> {
       where: { ingestionSourceId: { not: null } },
     });
 
-    const byRule = await Promise.all(
-      ruleGroups
-        .sort((a, b) => b._count.id - a._count.id)
-        .map(async (group) => {
-          const sample = await prisma.alert.findFirst({
-            where: { title: group.title, severity: group.severity, ingestionSourceId: { not: null } },
-            include: { mitreMappings: true },
-          });
-          return {
-            title: group.title,
-            severity: group.severity,
-            mitreTechniqueIds: sample?.mitreMappings.map((m) => m.mitreTechniqueId) ?? [],
-            count: group._count.id,
-          };
-        }),
-    );
+    // One sample alert per (title, severity) group in a single query — this
+    // used to be a Promise.all of one findFirst per group (N+1: parallelized,
+    // so not slow in practice, but still N round trips that `distinct` does
+    // in one).
+    const samples = await prisma.alert.findMany({
+      where: { ingestionSourceId: { not: null } },
+      distinct: ["title", "severity"],
+      include: { mitreMappings: true },
+    });
+    const sampleByGroup = new Map(samples.map((s) => [JSON.stringify([s.title, s.severity]), s]));
+
+    const byRule = ruleGroups
+      .sort((a, b) => b._count.id - a._count.id)
+      .map((group) => {
+        const sample = sampleByGroup.get(JSON.stringify([group.title, group.severity]));
+        return {
+          title: group.title,
+          severity: group.severity,
+          mitreTechniqueIds: sample?.mitreMappings.map((m) => m.mitreTechniqueId) ?? [],
+          count: group._count.id,
+        };
+      });
 
     return { bySource, byRule };
   });

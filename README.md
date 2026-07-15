@@ -61,9 +61,13 @@ Run from the repo root (fanned out to every workspace package via Turborepo):
 pnpm build          # production build
 pnpm lint           # ESLint
 pnpm typecheck      # tsc --noEmit
-pnpm test           # Vitest
-pnpm test:coverage  # Vitest with coverage thresholds (apps/api, apps/worker, packages/auth, packages/connectors)
+pnpm test           # Vitest (apps/api, apps/worker, packages/auth, packages/connectors, packages/observability, packages/ui)
+pnpm test:coverage  # Vitest with coverage thresholds
 pnpm format         # Prettier
+
+# E2E + accessibility (needs Postgres/Redis + a seeded DB — see Getting started)
+pnpm --filter @soc/web exec playwright install --with-deps chromium  # once
+pnpm --filter @soc/web test:e2e
 ```
 
 ## Docker
@@ -119,7 +123,7 @@ Two deployment paths, both consuming the same Docker images — see
 
 ## Status
 
-Phase 9 (Observability) is complete, on top of a fully functional core platform (Phases 4-8): the full frontend (dashboard, alert triage, incident workboard, asset inventory, vulnerability management, threat intel + MITRE ATT&CK matrix, threat hunting, audit logs, notifications, reports, advanced analytics) is wired up to the real API, the platform ingests real telemetry through a dedicated BullMQ worker app, and CI/security pipelines are live on GitHub (dependency scanning: zero known vulnerabilities, down from 11 at the Phase 1 baseline — see `docs/ci-cd.md` for the `pnpm audit` → OSV-Scanner switch forced by npm's registry retiring the legacy audit endpoint). Building the Kubernetes/Terraform deployment configs surfaced and fixed two real bugs no earlier phase had caught: the API's `/ready` endpoint didn't actually check its dependencies despite claiming to, and the worker crashed its entire process (not just the affected request) on any transient database hiccup. Both are fixed and live-verified — including watching the worker survive a real Postgres outage and self-recover with zero restarts. The OpenTelemetry/Prometheus/Tempo/Loki/Grafana stack was brought up end to end against real traffic (an actual login, file upload, WebSocket connection, and a deliberately-injected job failure) to confirm traces, metrics, and logs all genuinely flow rather than just being configured on paper. See `TASKS.md` for the live checklist.
+Phase 10 (Testing & Optimization) is complete, on top of a fully functional core platform (Phases 4-9): the full frontend (dashboard, alert triage, incident workboard, asset inventory, vulnerability management, threat intel + MITRE ATT&CK matrix, threat hunting, audit logs, notifications, reports, advanced analytics) is wired up to the real API, the platform ingests real telemetry through a dedicated BullMQ worker app, and both CI/security pipelines and the OpenTelemetry/Prometheus/Tempo/Loki/Grafana observability stack are live and verified. Phase 10 doubled down on the project's "verify, don't assume" discipline and it kept paying off: writing real integration tests for every API route found and fixed a genuinely untested `DELETE /alerts/:id`; adding Playwright E2E coverage found a real CSRF race condition (a fire-and-forget cookie-priming call that human typing speed always happened to win, but a fast/scripted client wouldn't); adding automated accessibility checks found that all 14 filter/form dropdowns across the app were invisible to screen readers (Radix's `combobox` role doesn't support "accessible name from content" per WAI-ARIA, despite the text being visually present); and a Prisma N+1 audit found and fixed one real N-parallel-queries pattern in the analytics endpoint. `apps/api` test coverage went from 70% to 93%. See `TASKS.md` for the full list and `docs/ci-cd.md` for the new Playwright/accessibility CI job.
 
 ## License
 

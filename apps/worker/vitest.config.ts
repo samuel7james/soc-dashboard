@@ -19,10 +19,10 @@ export default defineConfig({
       // business logic (ingestion-service) is unit-tested today. Raise this
       // as more of that wiring gets integration-tested (Phase 10).
       thresholds: {
-        statements: 15,
-        branches: 25,
-        functions: 25,
-        lines: 15,
+        statements: 18,
+        branches: 30,
+        functions: 30,
+        lines: 18,
       },
     },
   },

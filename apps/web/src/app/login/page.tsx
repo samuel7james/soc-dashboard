@@ -38,7 +38,7 @@ export default function LoginPage() {
   const errorMessage = loginMutation.error instanceof ApiError ? loginMutation.error.message : undefined;
 
   return (
-    <div className="bg-background flex min-h-screen items-center justify-center p-4">
+    <main className="bg-background flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="items-center text-center">
           <ShieldCheck className="text-primary mb-2 size-8" aria-hidden />
@@ -80,6 +80,6 @@ export default function LoginPage() {
           </form>
         </CardContent>
       </Card>
-    </div>
+    </main>
   );
 }

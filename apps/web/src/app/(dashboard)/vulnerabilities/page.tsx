@@ -80,9 +80,9 @@ function CreateVulnerabilityDialog() {
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label>Severity</Label>
+              <Label htmlFor="vuln-severity">Severity</Label>
               <Select value={severity} onValueChange={(v) => setSeverity(v as Severity)}>
-                <SelectTrigger>
+                <SelectTrigger id="vuln-severity">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -96,9 +96,9 @@ function CreateVulnerabilityDialog() {
             </div>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label>Affected asset</Label>
+            <Label htmlFor="vuln-asset">Affected asset</Label>
             <Select value={assetId || "none"} onValueChange={(v) => setAssetId(v === "none" ? "" : v)}>
-              <SelectTrigger>
+              <SelectTrigger id="vuln-asset">
                 <SelectValue placeholder="None" />
               </SelectTrigger>
               <SelectContent>
@@ -178,7 +178,7 @@ export default function VulnerabilitiesPage() {
                               })
                             }
                           >
-                            <SelectTrigger className="h-7 w-36">
+                            <SelectTrigger className="h-7 w-36" aria-label={`Status for ${vuln.title}`}>
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>

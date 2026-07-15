@@ -4,6 +4,8 @@ dist
 .turbo
 pnpm-lock.yaml
 coverage
+test-results
+playwright-report
 
 # Helm chart templates are YAML-with-Go-template-directives, not valid
 # standalone YAML — Prettier's YAML parser chokes on the {{ }} syntax.

@@ -135,6 +135,7 @@ describe("GET /analytics/detection-effectiveness", () => {
         severity: "medium",
         status: "open",
         ingestionSourceId: source.id,
+        mitreMappings: { create: [{ mitreTechniqueId: "T1110" }] },
       },
     });
     createdAlertIds.push(alert.id);
@@ -147,6 +148,17 @@ describe("GET /analytics/detection-effectiveness", () => {
     expect(entry.rawEventCount).toBe(2);
     expect(entry.alertCount).toBe(1);
     expect(entry.alertRate).toBe(50);
+
+    // byRule groups by (title, severity) and attaches one sample's MITRE
+    // mappings via a single `distinct` query (previously N parallel
+    // findFirst calls, one per group) — assert the grouping and the
+    // attached sample data both still come out right.
+    const rule = body.byRule.find(
+      (r: { title: string; severity: string }) => r.title === alert.title && r.severity === "medium",
+    );
+    expect(rule).toBeDefined();
+    expect(rule.count).toBe(1);
+    expect(rule.mitreTechniqueIds).toEqual(["T1110"]);
   });
 });
 

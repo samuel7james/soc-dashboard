@@ -58,9 +58,9 @@ function CreateIocDialog() {
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <Label>Type</Label>
+              <Label htmlFor="ioc-type">Type</Label>
               <Select value={type} onValueChange={(v) => setType(v as IocType)}>
-                <SelectTrigger>
+                <SelectTrigger id="ioc-type">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -73,9 +73,9 @@ function CreateIocDialog() {
               </Select>
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label>Severity</Label>
+              <Label htmlFor="ioc-severity">Severity</Label>
               <Select value={severity} onValueChange={(v) => setSeverity(v as Severity)}>
-                <SelectTrigger>
+                <SelectTrigger id="ioc-severity">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

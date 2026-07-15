@@ -72,9 +72,9 @@ function CreateIncidentDialog() {
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label>Severity</Label>
+            <Label htmlFor="incident-severity">Severity</Label>
             <Select value={severity} onValueChange={(v) => setSeverity(v as Severity)}>
-              <SelectTrigger>
+              <SelectTrigger id="incident-severity">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -129,7 +129,7 @@ function IncidentDetailDialog({ incidentId, onClose }: { incidentId: string | nu
                   updateIncident.mutate({ id: incidentId, data: { status: v as IncidentStatus } })
                 }
               >
-                <SelectTrigger className="h-7 w-40">
+                <SelectTrigger className="h-7 w-40" aria-label="Incident status">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -150,7 +150,7 @@ function IncidentDetailDialog({ incidentId, onClose }: { incidentId: string | nu
                   })
                 }
               >
-                <SelectTrigger className="h-7 w-44">
+                <SelectTrigger className="h-7 w-44" aria-label="Assigned to">
                   <SelectValue placeholder="Unassigned" />
                 </SelectTrigger>
                 <SelectContent>

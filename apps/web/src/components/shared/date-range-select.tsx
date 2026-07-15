@@ -10,7 +10,7 @@ const PRESETS = [
 export function DateRangeSelect({ days, onChange }: { days: number; onChange: (days: number) => void }) {
   return (
     <Select value={String(days)} onValueChange={(v) => onChange(Number(v))}>
-      <SelectTrigger className="w-40">
+      <SelectTrigger className="w-40" aria-label="Date range">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

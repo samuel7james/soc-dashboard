@@ -16,6 +16,19 @@ function readCookie(name: string): string | undefined {
   return match?.[1] ? decodeURIComponent(match[1]) : undefined;
 }
 
+// Providers.tsx also fires a background GET /api/v1/csrf on mount to warm
+// this cookie before the user finishes typing — but that's fire-and-forget,
+// so nothing here can assume it has landed. A mutating call fired quickly
+// enough after page load (fast form-fill/autofill, or a scripted client)
+// would otherwise race it and 403. This makes every mutating request
+// self-sufficient regardless of whether the background prime won the race.
+async function ensureCsrfToken(): Promise<string | undefined> {
+  const existing = readCookie("csrf_token");
+  if (existing) return existing;
+  await fetch(`${API_BASE_URL}/api/v1/csrf`, { credentials: "include" });
+  return readCookie("csrf_token");
+}
+
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
@@ -29,7 +42,7 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
   }
 
   if (!SAFE_METHODS.has(method)) {
-    const csrfToken = readCookie("csrf_token");
+    const csrfToken = await ensureCsrfToken();
     if (csrfToken) headers["X-CSRF-Token"] = csrfToken;
   }
 
@@ -59,7 +72,7 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
 // multipart boundary in Content-Type — apiFetch always forces application/json.
 export async function apiUpload<T>(path: string, formData: FormData): Promise<T> {
   const headers: Record<string, string> = {};
-  const csrfToken = readCookie("csrf_token");
+  const csrfToken = await ensureCsrfToken();
   if (csrfToken) headers["X-CSRF-Token"] = csrfToken;
 
   const response = await fetch(`${API_BASE_URL}${path}`, {

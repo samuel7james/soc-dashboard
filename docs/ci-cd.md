@@ -6,18 +6,20 @@ Two workflows live under `.github/workflows/`.
 
 Triggers on every push to `main` and every pull request.
 
-| Job              | What it does                                                                                                                                                               |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `lint-typecheck` | `pnpm format:check`, `pnpm lint`, `pnpm typecheck` across the whole workspace                                                                                              |
-| `test`           | Boots real Postgres + Redis service containers, runs `prisma migrate deploy`, then `pnpm test:coverage` (all 39+ API integration tests, worker/auth/connectors unit tests) |
-| `build`          | `pnpm build` — compiles all 3 apps + packages                                                                                                                              |
-| `docker-build`   | Builds the `api`, `worker`, and `web` Docker targets (matrix job) to catch Dockerfile breakage, without pushing anywhere                                                   |
+| Job              | What it does                                                                                                                                                                                                                                                                                             |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lint-typecheck` | `pnpm format:check`, `pnpm lint`, `pnpm typecheck` across the whole workspace                                                                                                                                                                                                                            |
+| `test`           | Boots real Postgres + Redis service containers, runs `prisma migrate deploy`, then `pnpm test:coverage` (92 API integration tests, worker/auth/connectors/observability/ui unit tests)                                                                                                                   |
+| `e2e`            | Boots real Postgres + Redis, migrates + seeds, installs Chromium, then `playwright test` — the real dev servers (api + web) against the real DB, per `apps/web/playwright.config.ts`'s `webServer` config. Covers the login → triage → resolve E2E flow plus a WCAG 2 A/AA accessibility scan of 6 pages |
+| `build`          | `pnpm build` — compiles all 3 apps + packages                                                                                                                                                                                                                                                            |
+| `docker-build`   | Builds the `api`, `worker`, and `web` Docker targets (matrix job) to catch Dockerfile breakage, without pushing anywhere                                                                                                                                                                                 |
 
 Coverage reports (lcov + json-summary, one per tested package) are uploaded as
 a workflow artifact on every run (`coverage-reports`, 14-day retention). No
 external coverage service (Codecov, Coveralls) is wired up — there's no
 account for one yet. Adding one later is just: add its action + a repo secret
-to the `test` job; the lcov output it needs is already produced.
+to the `test` job; the lcov output it needs is already produced. The `e2e` job
+uploads its own Playwright HTML report (`playwright-report`, 14-day retention).
 
 ## `security.yml`
 
@@ -81,6 +83,7 @@ Rulesets UI) for `main`:
   assuming the string below):
   - `Lint & Typecheck`
   - `Unit & Integration Tests`
+  - `E2E & Accessibility (Playwright)`
   - `Build`
   - `Docker Build (api / worker / web)` (all 3 matrix legs)
   - `CodeQL`

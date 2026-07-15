@@ -8,10 +8,10 @@ export default defineConfig({
       include: ["src/**/*.ts"],
       exclude: ["**/*.test.ts", "src/index.ts"], // barrel export, no logic of its own
       thresholds: {
-        statements: 75,
-        branches: 75,
-        functions: 80,
-        lines: 75,
+        statements: 90,
+        branches: 85,
+        functions: 95,
+        lines: 90,
       },
     },
   },

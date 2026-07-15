@@ -10,6 +10,7 @@ const testRunId = crypto.randomUUID().slice(0, 8);
 const password = "correct-horse-battery-staple";
 const analystEmail = `alerts-analyst-${testRunId}@test.local`;
 const readOnlyEmail = `alerts-readonly-${testRunId}@test.local`;
+const ownerEmail = `alerts-owner-${testRunId}@test.local`;
 
 let app: FastifyInstance;
 const createdUserIds: string[] = [];
@@ -20,13 +21,14 @@ beforeAll(async () => {
   await app.ready();
 
   const passwordHash = await hashPassword(password);
-  const [analyst, readOnly] = await Promise.all([
+  const [analyst, readOnly, owner] = await Promise.all([
     prisma.user.create({ data: { email: analystEmail, name: "Analyst", role: "analyst", passwordHash } }),
     prisma.user.create({
       data: { email: readOnlyEmail, name: "Read Only", role: "read_only", passwordHash },
     }),
+    prisma.user.create({ data: { email: ownerEmail, name: "Owner", role: "owner", passwordHash } }),
   ]);
-  createdUserIds.push(analyst.id, readOnly.id);
+  createdUserIds.push(analyst.id, readOnly.id, owner.id);
 });
 
 afterAll(async () => {
@@ -41,6 +43,12 @@ afterAll(async () => {
 async function asAnalyst(): Promise<TestClient> {
   const client = new TestClient(app);
   await client.loginAs(analystEmail, password);
+  return client;
+}
+
+async function asOwner(): Promise<TestClient> {
+  const client = new TestClient(app);
+  await client.loginAs(ownerEmail, password);
   return client;
 }
 
@@ -113,5 +121,36 @@ describe("alert CRUD with MITRE technique mapping", () => {
 
     const attempt = await client.post("/api/v1/alerts", { title: "should fail", severity: "low" });
     expect(attempt.statusCode).toBe(403);
+  });
+
+  it("404s updating a nonexistent alert", async () => {
+    const client = await asAnalyst();
+    const res = await client.patch(`/api/v1/alerts/${crypto.randomUUID()}`, { status: "acknowledged" });
+    expect(res.statusCode).toBe(404);
+  });
+
+  it("analyst cannot delete, owner can", async () => {
+    const analystClient = await asAnalyst();
+    const created = await analystClient.post("/api/v1/alerts", {
+      title: `to delete ${testRunId}`,
+      severity: "low",
+    });
+    const alert = created.json();
+
+    const analystDelete = await analystClient.delete(`/api/v1/alerts/${alert.id}`);
+    expect(analystDelete.statusCode).toBe(403);
+
+    const ownerClient = await asOwner();
+    const ownerDelete = await ownerClient.delete(`/api/v1/alerts/${alert.id}`);
+    expect(ownerDelete.statusCode).toBe(204);
+
+    const fetchAfterDelete = await ownerClient.get(`/api/v1/alerts/${alert.id}`);
+    expect(fetchAfterDelete.statusCode).toBe(404);
+  });
+
+  it("404s deleting a nonexistent alert", async () => {
+    const client = await asOwner();
+    const res = await client.delete(`/api/v1/alerts/${crypto.randomUUID()}`);
+    expect(res.statusCode).toBe(404);
   });
 });

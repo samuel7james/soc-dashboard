@@ -68,9 +68,9 @@ function CreateAssetDialog() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <Label>Type</Label>
+              <Label htmlFor="asset-type">Type</Label>
               <Select value={type} onValueChange={(v) => setType(v as AssetType)}>
-                <SelectTrigger>
+                <SelectTrigger id="asset-type">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -83,9 +83,9 @@ function CreateAssetDialog() {
               </Select>
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label>Criticality</Label>
+              <Label htmlFor="asset-criticality">Criticality</Label>
               <Select value={criticality} onValueChange={(v) => setCriticality(v as Severity)}>
-                <SelectTrigger>
+                <SelectTrigger id="asset-criticality">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

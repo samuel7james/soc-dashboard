@@ -116,6 +116,75 @@ jobs:
             apps/worker/coverage
             packages/auth/coverage
             packages/connectors/coverage
+            packages/observability/coverage
+            packages/ui/coverage
+          retention-days: 14
+
+  e2e:
+    name: E2E & Accessibility (Playwright)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: soc
+          POSTGRES_PASSWORD: soc_ci_password
+          POSTGRES_DB: soc_platform
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U soc -d soc_platform"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://soc:soc_ci_password@localhost:5432/soc_platform?schema=public
+      REDIS_URL: redis://localhost:6379
+      JWT_ACCESS_SECRET: ci-only-test-secret-at-least-32-characters-long
+      NEXT_PUBLIC_API_URL: http://localhost:4000
+      NODE_ENV: development # `next dev`/`tsx watch` — the E2E target is the real dev servers, not a production build
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Apply database migrations
+        run: pnpm --filter @soc/database exec prisma migrate deploy
+
+      - name: Seed reference data (incl. the owner account the E2E test logs in as)
+        run: pnpm --filter @soc/database db:seed
+
+      - name: Install Playwright browsers
+        run: pnpm --filter @soc/web exec playwright install --with-deps chromium
+
+      - name: Run Playwright E2E + accessibility suite
+        run: pnpm --filter @soc/web exec playwright test
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report
           retention-days: 14
 
   build:
