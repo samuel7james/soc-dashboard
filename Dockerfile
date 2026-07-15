@@ -15,7 +15,7 @@
 # bundling or a TS loader. Bundling inlines first-party source and leaves
 # real npm dependencies external, resolved normally from node_modules.
 
-FROM node:20-bookworm-slim AS base
+FROM node:26-bookworm-slim AS base
 # Prisma's query engine needs OpenSSL to be present to detect the correct
 # engine binary — without it, `prisma generate`/postinstall falls back to a
 # guessed version that may not match what's actually on the system.
@@ -77,7 +77,7 @@ RUN pnpm --filter @soc/web build
 # a worthwhile follow-up, not a blocker for a working image.
 
 # ================= api =================
-FROM node:20-bookworm-slim AS api
+FROM node:26-bookworm-slim AS api
 RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 ENV NODE_ENV=production
@@ -93,7 +93,7 @@ USER node
 CMD ["node", "--import", "./otel/instrumentation.mjs", "dist/index.js"]
 
 # ================= worker =================
-FROM node:20-bookworm-slim AS worker
+FROM node:26-bookworm-slim AS worker
 RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 ENV NODE_ENV=production
@@ -109,7 +109,7 @@ USER node
 CMD ["node", "--import", "./otel/instrumentation.mjs", "dist/index.js"]
 
 # ================= web =================
-FROM node:20-bookworm-slim AS web
+FROM node:26-bookworm-slim AS web
 ENV NODE_ENV=production
 WORKDIR /repo
 # Next's standalone output already traces and includes only the node_modules
