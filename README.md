@@ -1,28 +1,119 @@
 # SOC Platform
 
-An enterprise-grade Security Operations Center platform, in active rebuild. See [`PROJECT_PLAN.md`](PROJECT_PLAN.md) for the full architecture/audit and [`TASKS.md`](TASKS.md) for phase-by-phase progress.
+A real, working Security Operations Center platform — alert triage, incident
+management, threat intelligence, vulnerability management, MITRE ATT&CK
+mapping, threat hunting, and advanced analytics, backed by an actual
+ingestion pipeline (syslog, CSV/JSON upload) rather than fabricated "live"
+data. It replaces an earlier prototype (a single Express server + vanilla-JS
+frontend that generated its "live threat detection" with `Math.random()`) —
+see [`CHANGELOG.md`](CHANGELOG.md) for the full rebuild history and
+[`docs/architecture.md`](docs/architecture.md) for how it's put together.
 
-The original bash-script-driven demo (Express + vanilla JS, `Math.random()`-backed "live" data) has been fully replaced by the monorepo below, which now exceeds its feature set with real data end to end.
+## Screenshots
+
+Real screens from a running instance — seeded demo data, not mockups.
+
+<table>
+<tr>
+<td width="50%">
+
+**Executive Overview**
+![Overview](docs/screenshots/overview.png)
+
+</td>
+<td width="50%">
+
+**Alerts triage queue**
+![Alerts](docs/screenshots/alerts.png)
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Alert detail**
+![Alert detail](docs/screenshots/alert-detail.png)
+
+</td>
+<td width="50%">
+
+**Incident detail — timeline & status workflow**
+![Incident detail](docs/screenshots/incident-detail.png)
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Advanced Analytics — trends, MITRE, risk**
+![Analytics](docs/screenshots/analytics.png)
+
+</td>
+<td width="50%">
+
+**Threat Intelligence — IOCs**
+![Threat Intelligence](docs/screenshots/threat-intel.png)
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Asset Inventory**
+![Assets](docs/screenshots/assets.png)
+
+</td>
+<td width="50%">
+
+**Vulnerability Management**
+![Vulnerabilities](docs/screenshots/vulnerabilities.png)
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Threat Hunting — raw event search**
+![Hunting](docs/screenshots/hunting.png)
+
+</td>
+<td width="50%">
+
+**Audit Logs**
+![Audit Logs](docs/screenshots/audit-logs.png)
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Login**
+![Login](docs/screenshots/login.png)
+
+</td>
+<td width="50%"></td>
+</tr>
+</table>
 
 ## Monorepo layout
 
 ```text
 apps/
-  web/          Next.js (App Router, TypeScript strict, Tailwind, shadcn-style UI)
-  api/          Fastify API (TypeScript strict, Zod validation, Pino logging, auth)
-  worker/       BullMQ worker: ingestion pipeline, Demo Mode, scheduled jobs
+  web/            Next.js (App Router, TypeScript strict, Tailwind, shadcn-style UI)
+  api/            Fastify API (TypeScript strict, Zod validation, Pino logging, auth)
+  worker/         BullMQ worker: ingestion pipeline, Demo Mode, scheduled jobs
 packages/
-  types/        Shared Zod schemas + inferred types, consumed by both apps
-  ui/           Shared design tokens, theme provider, and cross-cutting components
-  auth/         Password hashing (argon2id) and JWT/refresh-token primitives
-  database/     Prisma schema, migrations, seed script
-  connectors/   Ingestion parsers (syslog, CSV) and detection rules, shared by api + worker
-  observability/ Custom OTel metric instruments (WS connections, ingestion lag, queue depth/failures)
-  config/       Shared base tsconfig
+  types/          Shared Zod schemas + inferred types, consumed by both apps
+  ui/             Shared design tokens, theme provider, and cross-cutting components
+  auth/           Password hashing (argon2id) and JWT/refresh-token primitives
+  database/       Prisma schema, migrations, seed script
+  connectors/     Ingestion parsers (syslog, CSV) and detection rules, shared by api + worker
+  observability/  Custom OTel metric instruments (WS connections, ingestion lag, queue depth/failures)
+  config/         Shared base tsconfig
 deploy/
-  helm/         Kubernetes Helm chart (soc-platform)
-  terraform/    AWS reference module (ECS Fargate, RDS, ElastiCache, S3)
-  observability/ OTel Collector, Prometheus, Tempo, Loki, Promtail, Grafana, Alertmanager configs
+  helm/           Kubernetes Helm chart (soc-platform)
+  terraform/      AWS reference module (ECS Fargate, RDS, ElastiCache, S3)
+  observability/  OTel Collector, Prometheus, Tempo, Loki, Promtail, Grafana, Alertmanager configs
 ```
 
 ## Requirements
@@ -43,7 +134,7 @@ docker compose up -d
 cp apps/web/.env.example apps/web/.env.local
 cp apps/api/.env.example apps/api/.env
 
-# apply migrations and seed a dev owner account (owner@soc.local)
+# apply migrations and seed a dev owner account (owner@soc.local / ChangeMe123!)
 pnpm --filter @soc/database db:migrate
 pnpm --filter @soc/database db:seed
 
@@ -52,6 +143,9 @@ pnpm dev          # runs all apps in parallel via Turborepo
 
 - Web: <http://localhost:3000> (redirects to `/login`)
 - API: <http://localhost:4000> (`/health`, `/ready`, `/api/v1`, OpenAPI docs at `/docs` in non-production)
+
+Rotate the seeded owner account's password before using this anywhere
+beyond local development — see [`docs/release-checklist.md`](docs/release-checklist.md).
 
 ## Scripts
 
@@ -121,9 +215,20 @@ Two deployment paths, both consuming the same Docker images — see
   ElastiCache Redis, ECR, ECS Fargate, ALB, S3. `init`/`validate`/`plan`'d
   successfully (no AWS account available to `apply` against).
 
-## Status
+## Documentation
 
-Phase 10 (Testing & Optimization) is complete, on top of a fully functional core platform (Phases 4-9): the full frontend (dashboard, alert triage, incident workboard, asset inventory, vulnerability management, threat intel + MITRE ATT&CK matrix, threat hunting, audit logs, notifications, reports, advanced analytics) is wired up to the real API, the platform ingests real telemetry through a dedicated BullMQ worker app, and both CI/security pipelines and the OpenTelemetry/Prometheus/Tempo/Loki/Grafana observability stack are live and verified. Phase 10 doubled down on the project's "verify, don't assume" discipline and it kept paying off: writing real integration tests for every API route found and fixed a genuinely untested `DELETE /alerts/:id`; adding Playwright E2E coverage found a real CSRF race condition (a fire-and-forget cookie-priming call that human typing speed always happened to win, but a fast/scripted client wouldn't); adding automated accessibility checks found that all 14 filter/form dropdowns across the app were invisible to screen readers (Radix's `combobox` role doesn't support "accessible name from content" per WAI-ARIA, despite the text being visually present); and a Prisma N+1 audit found and fixed one real N-parallel-queries pattern in the analytics endpoint. `apps/api` test coverage went from 70% to 93%. See `TASKS.md` for the full list and `docs/ci-cd.md` for the new Playwright/accessibility CI job.
+| Doc                                                      | Covers                                                                       |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| [`docs/architecture.md`](docs/architecture.md)           | System design, data flow, and the reasoning behind the non-obvious decisions |
+| [`docs/api.md`](docs/api.md)                             | REST API reference (generated from the live OpenAPI spec) + narrative        |
+| [`docs/database-erd.md`](docs/database-erd.md)           | Entity-relationship diagram + schema design notes                            |
+| [`docs/security.md`](docs/security.md)                   | AuthN/AuthZ, CSRF, dependency scanning, secrets management                   |
+| [`docs/deployment.md`](docs/deployment.md)               | Kubernetes/Helm and Terraform/ECS deployment, rollback procedures            |
+| [`docs/observability.md`](docs/observability.md)         | OpenTelemetry/Prometheus/Tempo/Loki/Grafana pipeline                         |
+| [`docs/ci-cd.md`](docs/ci-cd.md)                         | GitHub Actions pipelines, branch protection, Dependabot                      |
+| [`docs/release-checklist.md`](docs/release-checklist.md) | Concrete pre-flight checklist for a real production deploy                   |
+| [`CHANGELOG.md`](CHANGELOG.md)                           | Full rebuild history, phase by phase, with real dates                        |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md)                     | Dev workflow, code conventions, testing conventions                          |
 
 ## License
 

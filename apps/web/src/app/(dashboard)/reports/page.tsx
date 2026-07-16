@@ -49,8 +49,9 @@ export default function ReportsPage() {
       </div>
 
       <p className="text-muted-foreground mt-6 text-sm">
-        Scheduled report generation and delivery (email/webhook) runs through the background worker and lands
-        alongside notification delivery — see <code>TASKS.md</code>.
+        Scheduled report generation and delivery (email/webhook) isn&apos;t built yet — exports above are
+        real, on-demand, and synchronous. The worker already has a repeatable job registered for this (
+        <code>apps/worker/src/processors/scheduled-reports.ts</code>), stubbed pending a delivery transport.
       </p>
     </div>
   );

@@ -154,6 +154,6 @@ erDiagram
 
 - **`Alert.incidentId` is a simple nullable FK, not a join table.** An alert belongs to at most one incident at a time; an incident groups many alerts. This is the realistic cardinality for triage workflows and avoids an unnecessary many-to-many.
 - **`AlertMitreMapping` is a genuine many-to-many join table** (composite primary key `[alertId, mitreTechniqueId]`) because an alert commonly maps to multiple ATT&CK techniques and a technique appears across many alerts.
-- **`Session.refreshTokenHash` stores a SHA-256 hash, never the raw token.** See [Phase 3 auth design](../PROJECT_PLAN.md) — a database read alone can't be replayed as a live session.
+- **`Session.refreshTokenHash` stores a SHA-256 hash, never the raw token.** See [`docs/security.md`](security.md) — a database read alone can't be replayed as a live session.
 - **`RawEvent.payload` is intentionally schema-loose (`Json`)** — it's the landing table for whatever an ingestion connector produces before normalization; `Alert` is the normalized, correlated output that the rest of the platform actually queries against.
 - **`MitreTechnique` is seeded reference data**, not user-editable through the API — see `packages/database/prisma/seed-data/mitre-techniques.ts`.
