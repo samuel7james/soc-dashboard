@@ -33,12 +33,3 @@ export async function cached<T>(key: string, ttlSeconds: number, load: () => Pro
 
   return value;
 }
-
-export async function invalidateCache(key: string): Promise<void> {
-  if (!redis) return;
-  try {
-    await redis.del(key);
-  } catch {
-    // best-effort
-  }
-}

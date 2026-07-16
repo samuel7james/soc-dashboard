@@ -6,8 +6,7 @@ mapping, threat hunting, and advanced analytics, backed by an actual
 ingestion pipeline (syslog, CSV/JSON upload) rather than fabricated "live"
 data. It replaces an earlier prototype (a single Express server + vanilla-JS
 frontend that generated its "live threat detection" with `Math.random()`) —
-see [`CHANGELOG.md`](CHANGELOG.md) for the full rebuild history and
-[`docs/architecture.md`](docs/architecture.md) for how it's put together.
+see [`docs/architecture.md`](docs/architecture.md) for how it's put together.
 
 ## Screenshots
 
@@ -227,7 +226,6 @@ Two deployment paths, both consuming the same Docker images — see
 | [`docs/observability.md`](docs/observability.md)         | OpenTelemetry/Prometheus/Tempo/Loki/Grafana pipeline                         |
 | [`docs/ci-cd.md`](docs/ci-cd.md)                         | GitHub Actions pipelines, branch protection, Dependabot                      |
 | [`docs/release-checklist.md`](docs/release-checklist.md) | Concrete pre-flight checklist for a real production deploy                   |
-| [`CHANGELOG.md`](CHANGELOG.md)                           | Full rebuild history, phase by phase, with real dates                        |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md)                     | Dev workflow, code conventions, testing conventions                          |
 
 ## License

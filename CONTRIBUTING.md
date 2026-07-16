@@ -65,8 +65,7 @@ pnpm --filter @soc/web test:e2e
 - **A bug found by a test gets fixed, not worked around.** Several real
   bugs in this codebase's history were caught by adding test coverage a
   route didn't have yet (a CSRF race condition, an accessibility violation
-  affecting every dropdown in the app, an N+1 query) — see
-  [`CHANGELOG.md`](CHANGELOG.md) for the specifics. If your test finds
+  affecting every dropdown in the app, an N+1 query). If your test finds
   something, the fix belongs in the same PR.
 
 ## Commit messages

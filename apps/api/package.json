@@ -44,7 +44,6 @@
     "fastify-type-provider-zod": "^4.0.2",
     "ioredis": "5.10.1",
     "jose": "^5.9.6",
-    "pino": "^9.5.0",
     "zod": "^3.24.1"
   },
   "devDependencies": {

@@ -44,8 +44,10 @@ the header.
 `apps/web`'s API client (`apps/web/src/lib/api/client.ts`) makes this
 self-sufficient: if a mutating call fires before the cookie has been
 primed, it awaits a priming request first rather than depending on a
-background call having already completed. This was a real bug fixed during
-Phase 10 — see [`CHANGELOG.md`](../CHANGELOG.md#testing--optimization).
+background call having already completed. This is a real bug this
+project's own Playwright E2E suite caught — a fire-and-forget
+cookie-priming `useEffect` that human typing speed always happened to
+win the race against, but a fast/scripted client wouldn't.
 
 ## Transport & headers
 
@@ -75,9 +77,10 @@ parameterization, not string concatenation).
 
 React's default escaping handles the general case. No `dangerouslySetInnerHTML`
 anywhere in `apps/web`. This was a real, live vulnerability in the original
-codebase this project replaced (unescaped `innerHTML` interpolation of
-server-controlled data) — see [`CHANGELOG.md`](../CHANGELOG.md) for what it
-looked like before the rebuild.
+codebase this project replaced — unescaped `innerHTML` interpolation of
+server-controlled data (IPs, usernames, process names) throughout a
+hand-rolled dashboard class, a genuine stored/reflected XSS vector the
+moment any of that data was attacker-influenced.
 
 ## Audit logging
 
