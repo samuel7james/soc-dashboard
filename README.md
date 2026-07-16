@@ -36,61 +36,66 @@ Real screens from a running instance — seeded demo data, not mockups.
 </td>
 <td width="50%">
 
-**Incident detail — timeline & status workflow**
-![Incident detail](docs/screenshots/incident-detail.png)
+**Incidents — case management**
+![Incidents](docs/screenshots/incidents.png)
 
 </td>
 </tr>
 <tr>
+<td width="50%">
+
+**Incident detail — timeline & status workflow**
+![Incident detail](docs/screenshots/incident-detail.png)
+
+</td>
 <td width="50%">
 
 **Advanced Analytics — trends, MITRE, risk**
 ![Analytics](docs/screenshots/analytics.png)
 
 </td>
+</tr>
+<tr>
 <td width="50%">
 
 **Threat Intelligence — IOCs**
 ![Threat Intelligence](docs/screenshots/threat-intel.png)
 
 </td>
-</tr>
-<tr>
 <td width="50%">
 
 **Asset Inventory**
 ![Assets](docs/screenshots/assets.png)
 
 </td>
+</tr>
+<tr>
 <td width="50%">
 
 **Vulnerability Management**
 ![Vulnerabilities](docs/screenshots/vulnerabilities.png)
 
 </td>
-</tr>
-<tr>
 <td width="50%">
 
 **Threat Hunting — raw event search**
 ![Hunting](docs/screenshots/hunting.png)
 
 </td>
+</tr>
+<tr>
 <td width="50%">
 
 **Audit Logs**
 ![Audit Logs](docs/screenshots/audit-logs.png)
 
 </td>
-</tr>
-<tr>
 <td width="50%">
 
 **Login**
 ![Login](docs/screenshots/login.png)
 
 </td>
-<td width="50%"></td>
 </tr>
 </table>
 
