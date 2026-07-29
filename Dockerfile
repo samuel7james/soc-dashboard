@@ -42,6 +42,12 @@ COPY packages/config/package.json packages/config/package.json
 # below — it needs the real schema present at that point, or it silently
 # generates a non-functional stub (throws "did not initialize" at runtime).
 COPY packages/database/prisma packages/database/prisma
+# Prisma 7 reads CLI configuration from prisma.config.ts (it replaced
+# `package.json#prisma`). It sits beside the prisma/ directory rather than
+# inside it, so it needs its own COPY — without it the generate below falls
+# back to Prisma's default schema lookup and silently ignores this repo's
+# configuration.
+COPY packages/database/prisma.config.ts packages/database/prisma.config.ts
 
 # ---- full install (build tooling included), used to compile everything ----
 # The root package.json's own "postinstall" script explicitly runs `prisma
