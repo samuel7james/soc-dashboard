@@ -45,7 +45,7 @@ export function AlertsHeatmap({ cells }: { cells: HeatmapCell[] }) {
                   type="button"
                   title={`${dayLabel} ${hour}:00 — ${count} alert${count === 1 ? "" : "s"}`}
                   aria-label={`${dayLabel} ${hour}:00, ${count} alerts`}
-                  className="focus-visible:ring-ring size-4 rounded-[3px] transition-transform hover:scale-125 focus-visible:outline-none focus-visible:ring-2 sm:size-5"
+                  className="focus-visible:ring-ring size-4 rounded-[3px] transition-transform hover:scale-125 focus-visible:ring-2 focus-visible:outline-none sm:size-5"
                   style={{ backgroundColor: stepForRatio(count / max) }}
                 />
               );
