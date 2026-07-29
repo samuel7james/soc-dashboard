@@ -67,3 +67,7 @@ logs
 !*.tfvars.example
 crash.log
 crash.*.log 
+# Prisma 7 generates the client into the package source tree (see
+# packages/database/prisma/schema.prisma). It is produced by postinstall,
+# so it is build output, not source.
+packages/database/src/generated/
