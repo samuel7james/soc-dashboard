@@ -1,10 +1,20 @@
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+  // The generated client's internal imports are extensionless by default
+  // (`./internal/class`), which only resolves under bundler-style
+  // resolution. apps/api and apps/worker compile with NodeNext, where an
+  // extensionless relative import is not resolvable — and because every
+  // generated file carries `// @ts-nocheck`, that failure is silent: the
+  // unresolved imports become `any`, so `PrismaClient` and therefore the
+  // exported `prisma` degrade to `any` in both apps. That loses all
+  // database type safety while still compiling. Emitting `.js` extensions
+  // keeps the client resolvable under both.
+  importFileExtension = "js"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 // Mirrors the `userRoleSchema` enum in packages/types/src/enums.ts — keep in sync.
