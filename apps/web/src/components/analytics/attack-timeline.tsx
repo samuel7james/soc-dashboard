@@ -23,13 +23,13 @@ export function AttackTimeline({ events }: { events: TimelineEvent[] }) {
 
   return (
     <ol className="relative space-y-4 pl-6">
-      <div className="bg-border absolute bottom-1 left-[7px] top-1 w-px" aria-hidden />
+      <div className="bg-border absolute top-1 bottom-1 left-[7px] w-px" aria-hidden />
       {events.map((event) => {
         const Icon = event.kind === "incident" ? ShieldAlert : AlertTriangle;
         return (
           <li key={event.id} className="relative">
             <span
-              className="border-background absolute -left-6 top-1 size-3.5 rounded-full border-2"
+              className="border-background absolute top-1 -left-6 size-3.5 rounded-full border-2"
               style={{ backgroundColor: severityChartColor[event.severity] }}
               aria-hidden
             />
