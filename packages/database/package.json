@@ -24,7 +24,7 @@
     "@eslint/js": "^10.0.1",
     "@soc/auth": "workspace:*",
     "@soc/config": "workspace:*",
-    "@types/node": "^20.19.43",
+    "@types/node": "^24.10.1",
     "eslint": "^9.17.0",
     "globals": "^17.8.0",
     "prisma": "^6.1.0",
