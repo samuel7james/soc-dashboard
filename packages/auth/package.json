@@ -16,7 +16,7 @@
     "jose": "^5.9.6"
   },
   "devDependencies": {
-    "@eslint/js": "^9.17.0",
+    "@eslint/js": "^10.0.1",
     "@soc/config": "workspace:*",
     "@types/node": "^20.19.43",
     "@vitest/coverage-v8": "^3.2.6",
