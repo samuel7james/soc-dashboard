@@ -40,9 +40,14 @@
       "unrs-resolver"
     ],
     "overrides": {
-      "ioredis": "5.10.1",
+      "ioredis": "5.11.1",
       "vite": ">=6.4.3",
-      "postcss": ">=8.5.10"
+      "postcss": ">=8.5.10",
+      "find-my-way": "^9.7.0",
+      "fast-uri@^3": "^3.1.4",
+      "fast-uri@^4": "^4.1.1",
+      "sharp": "^0.35.0",
+      "@fastify/static": "^10.1.2"
     }
   }
 }
