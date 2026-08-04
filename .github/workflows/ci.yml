@@ -108,7 +108,7 @@ jobs:
         # artifact so they're inspectable without one. Swapping in a hosted
         # service later just means adding its action + a repo secret here.
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-reports
           path: |
@@ -181,7 +181,7 @@ jobs:
 
       - name: Upload Playwright report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: apps/web/playwright-report
