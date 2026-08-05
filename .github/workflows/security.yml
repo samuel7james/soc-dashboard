@@ -25,13 +25,13 @@ jobs:
       security-events: write
       actions: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: github/codeql-action/init@v3
+      - uses: github/codeql-action/init@v4
         with:
           languages: javascript-typescript
 
-      - uses: github/codeql-action/analyze@v3
+      - uses: github/codeql-action/analyze@v4
         with:
           category: codeql-javascript-typescript
 
@@ -44,7 +44,7 @@ jobs:
       contents: read
       security-events: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Run Semgrep
         run: semgrep scan --config auto --sarif --output semgrep.sarif
@@ -52,7 +52,7 @@ jobs:
         # account or SEMGREP_APP_TOKEN required. Add one later for premium
         # rulesets and PR comments.
 
-      - uses: github/codeql-action/upload-sarif@v3
+      - uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: semgrep.sarif
@@ -62,7 +62,7 @@ jobs:
     name: gitleaks (secret scanning)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -94,7 +94,7 @@ jobs:
     name: SBOM (CycloneDX)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Generate SBOM
         uses: anchore/sbom-action@v0
@@ -103,7 +103,7 @@ jobs:
           format: cyclonedx-json
           output-file: sbom.cyclonedx.json
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: sbom
           path: sbom.cyclonedx.json
@@ -119,7 +119,7 @@ jobs:
       matrix:
         target: [api, worker, web]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: docker/setup-buildx-action@v4
 
@@ -147,7 +147,7 @@ jobs:
           severity: CRITICAL,HIGH
           ignore-unfixed: true
 
-      - uses: github/codeql-action/upload-sarif@v3
+      - uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: trivy-${{ matrix.target }}.sarif
