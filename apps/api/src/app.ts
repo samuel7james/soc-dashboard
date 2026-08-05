@@ -68,6 +68,14 @@ export function buildApp() {
   app.register(cors, {
     origin: env.CORS_ORIGIN.split(",").map((origin) => origin.trim()),
     credentials: true,
+    // @fastify/cors 11 narrowed the default `methods` to the CORS-safelisted
+    // set (GET, HEAD, POST). Preflights still answer 204, but the response
+    // advertises only those three, so a browser refuses to send anything else
+    // — which silently blocks all 19 PATCH and 22 DELETE routes this API
+    // serves, i.e. every triage, resolve and delete action in the UI. Listing
+    // the methods explicitly restores the v10 behaviour and, unlike relying on
+    // a default, does not change under the next major.
+    methods: ["GET", "HEAD", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
   });
 
   // Rate limiting is skipped only in tests (which log in far more often, in a
