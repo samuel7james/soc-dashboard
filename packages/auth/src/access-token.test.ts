@@ -1,3 +1,4 @@
+import { SignJWT } from "jose";
 import { describe, expect, it } from "vitest";
 
 import { InvalidAccessTokenError, signAccessToken, verifyAccessToken } from "./access-token";
@@ -31,5 +32,19 @@ describe("access tokens", () => {
 
   it("rejects a malformed token", async () => {
     await expect(verifyAccessToken("not-a-jwt", SECRET)).rejects.toThrow(InvalidAccessTokenError);
+  });
+
+  // Every case above is rejected by jwtVerify itself — bad signature, expiry,
+  // unparseable — so none of them ever reach the payload-shape guard. This one
+  // is signed correctly with the real secret and passes verification, leaving
+  // the guard as the only thing standing between a claim-less token and a
+  // request being treated as authenticated.
+  it("rejects a validly-signed token whose payload is missing claims", async () => {
+    const token = await new SignJWT({ sub: "user-1", role: "analyst" })
+      .setProtectedHeader({ alg: "HS256" })
+      .setExpirationTime("5m")
+      .sign(new TextEncoder().encode(SECRET));
+
+    await expect(verifyAccessToken(token, SECRET)).rejects.toThrow(InvalidAccessTokenError);
   });
 });

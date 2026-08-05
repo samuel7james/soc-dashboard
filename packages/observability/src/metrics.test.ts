@@ -89,4 +89,16 @@ describe("metrics", () => {
     const point = metric?.dataPoints.find((dp) => dp.attributes.queue === "scheduled-reports");
     expect(point?.value).toBe(2);
   });
+
+  // The case above always supplies `waiting`, so its `?? 0` fallback is the one
+  // branch in this file nothing reached. An empty response is realistic — Redis
+  // omits counters for states a queue has never entered — and the value that
+  // matters is that it reports 0 rather than NaN.
+  it("reports zero depth when the queue returns no counts at all", async () => {
+    observeQueueDepth({ getJobCounts: () => Promise.resolve({}) }, "idle-queue");
+
+    const metric = findMetric(await collect(), "soc.queue.depth");
+    const point = metric?.dataPoints.find((dp) => dp.attributes.queue === "idle-queue");
+    expect(point?.value).toBe(0);
+  });
 });
