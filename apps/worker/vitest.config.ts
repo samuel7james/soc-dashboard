@@ -18,10 +18,18 @@ export default defineConfig({
       // end-to-end verification rather than unit tests. Only the pure
       // business logic (ingestion-service) is unit-tested today. Raise this
       // as more of that wiring gets integration-tested (Phase 10).
+      //
+      // functions/branches were 30 under Vitest 3. Nothing stopped being
+      // tested — Vitest 4 makes AST-aware remapping the default for the v8
+      // provider, which counts both far more precisely, and the honest figures
+      // for this package are 12.9% and 16.66%. The old numbers were inflated
+      // by the coarser attribution, so 30 was never actually being met. These
+      // are set just under the real values so the ratchet still catches a
+      // genuine regression; they are a floor to raise, not a target reached.
       thresholds: {
         statements: 18,
-        branches: 30,
-        functions: 30,
+        branches: 16,
+        functions: 12,
         lines: 18,
       },
     },
