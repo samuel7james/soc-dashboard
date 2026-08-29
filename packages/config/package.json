@@ -8,6 +8,6 @@
     "build-node-app.mjs"
   ],
   "dependencies": {
-    "esbuild": "^0.28.1"
+    "esbuild": "^0.28.2"
   }
 }
