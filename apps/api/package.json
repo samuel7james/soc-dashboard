@@ -31,9 +31,9 @@
     "@opentelemetry/sdk-metrics": "^2.10.0",
     "@opentelemetry/sdk-node": "^0.221.0",
     "@opentelemetry/semantic-conventions": "^1.38.0",
-    "@prisma/adapter-pg": "^7.9.1",
-    "@prisma/client": "^7.9.1",
-    "@prisma/instrumentation": "7.9.1",
+    "@prisma/adapter-pg": "^7.10.0",
+    "@prisma/client": "^7.10.0",
+    "@prisma/instrumentation": "7.10.0",
     "@soc/auth": "workspace:*",
     "@soc/connectors": "workspace:*",
     "@soc/database": "workspace:*",
@@ -45,7 +45,7 @@
     "fastify-type-provider-zod": "^7.0.0",
     "ioredis": "5.11.1",
     "jose": "^6.2.10",
-    "zod": "^4.4.3"
+    "zod": "^4.5.2"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
