@@ -16,14 +16,14 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@opentelemetry/sdk-metrics": "^2.10.0",
+    "@opentelemetry/sdk-metrics": "^2.11.0",
     "@soc/config": "workspace:*",
     "@types/node": "^24.10.1",
     "@vitest/coverage-v8": "^4.1.11",
     "eslint": "^9.17.0",
-    "globals": "^17.11.0",
+    "globals": "^17.12.0",
     "typescript": "^5.7.2",
-    "typescript-eslint": "^8.67.0",
+    "typescript-eslint": "^8.70.0",
     "vitest": "^4.1.11"
   }
 }
