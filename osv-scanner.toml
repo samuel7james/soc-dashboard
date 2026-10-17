@@ -1,0 +1,29 @@
+# Vulnerabilities that OSV-Scanner reports but which cannot currently be fixed
+# by upgrading. Each entry records why it is not reachable in a way that
+# matters here, and expires so it is re-examined rather than forgotten.
+
+[[IgnoredVulns]]
+id = "GHSA-vfj7-8cjw-p6xm"
+ignoreUntil = 2027-04-30
+reason = """
+braces: stack-exhaustion denial of service through deeply nested patterns
+(CVSS 8.7). No fix exists — the advisory covers all versions up to and
+including 3.0.3, which is the latest published release, so there is nothing to
+upgrade to.
+
+Not reachable in this repo in a way that matters. braces arrives on exactly one
+path, and it is development-only:
+
+  eslint-config-next 16.4.0 -> fast-glob 3.3.1 -> micromatch 4.0.8 -> braces 3.0.3
+
+That is ESLint's file-matching during `pnpm lint`. The glob patterns it expands
+come from this repo's own eslint configuration, not from user input, request
+bodies or anything else an attacker can influence, and braces is not present in
+any of the three runtime images — the API and worker bundles externalise only
+real runtime dependencies, and the web image ships the Next build output.
+
+A denial of service against our own lint step, triggerable only by someone who
+can already edit our eslint config, is not a meaningful risk. Revisit when
+micromatch or fast-glob ships a fix, or when eslint-config-next moves off
+fast-glob.
+"""
