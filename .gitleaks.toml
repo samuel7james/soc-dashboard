@@ -1,0 +1,20 @@
+# Gitleaks configuration.
+#
+# Extends the upstream default ruleset rather than replacing it, so every stock
+# rule still applies and new ones arrive automatically. This file only adds a
+# narrow allowlist for a value that is deliberately fake.
+[extend]
+useDefault = true
+
+[allowlist]
+description = """
+Unit-test fixture, not a credential. packages/auth/src/access-token.test.ts
+signs and verifies JWTs, which needs a key long enough to be accepted, so it
+declares a self-describing dummy ("test-secret-that-is-long-enough-..."). It is
+never read from configuration and corresponds to no deployed secret: the apps
+take their signing key from JWT_ACCESS_SECRET in the environment.
+
+Scoped to that single path, so a secret-shaped string anywhere else in the
+repository, including in the rest of packages/auth, still fails the scan.
+"""
+paths = ['''packages/auth/src/access-token\.test\.ts''']
