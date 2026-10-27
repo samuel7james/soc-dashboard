@@ -14,21 +14,21 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@opentelemetry/api": "^1.9.1",
-    "@opentelemetry/auto-instrumentations-node": "^0.81.0",
-    "@opentelemetry/exporter-metrics-otlp-http": "^0.223.0",
-    "@opentelemetry/exporter-trace-otlp-http": "^0.223.0",
+    "@opentelemetry/api": "^1.10.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.82.0",
+    "@opentelemetry/exporter-metrics-otlp-http": "^0.300.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.300.0",
     "@opentelemetry/resources": "^2.12.0",
     "@opentelemetry/sdk-metrics": "^2.12.0",
-    "@opentelemetry/sdk-node": "^0.223.0",
+    "@opentelemetry/sdk-node": "^0.300.0",
     "@opentelemetry/semantic-conventions": "^1.38.0",
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
-    "@prisma/instrumentation": "7.10.0",
+    "@prisma/instrumentation": "7.10.1",
     "@soc/connectors": "workspace:*",
     "@soc/database": "workspace:*",
     "@soc/observability": "workspace:*",
-    "bullmq": "^6.3.12",
+    "bullmq": "^6.4.1",
     "ioredis": "5.11.1",
     "pino": "^10.4.0",
     "zod": "^4.6.6"
@@ -44,7 +44,7 @@
     "rimraf": "^6.0.1",
     "tsx": "^4.23.15",
     "typescript": "^5.7.2",
-    "typescript-eslint": "^8.71.1",
+    "typescript-eslint": "^8.72.0",
     "vitest": "^4.1.11"
   }
 }
